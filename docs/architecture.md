@@ -17,6 +17,21 @@
 3. **Frontend only talks to the gateway.** The browser never calls a service port directly.
 4. **Layering inside each service:** `controller` → `service` → `repository`, with DTOs at the controller boundary.
 
+## Database layout
+
+One PostgreSQL server (Docker container `workflowpro-postgres`, host port 5440) holds four separate databases.
+Each database is owned by its own account, and `CONNECT` is revoked from everyone else, so a service
+physically cannot open another service's database.
+
+| Database | Owner account | Used by |
+|---|---|---|
+| `auth_db` | `auth_user` | auth-service |
+| `project_db` | `project_user` | project-service |
+| `task_db` | `task_user` | task-service |
+| `notification_db` | `notification_user` | notification-service |
+
+Flyway creates and changes all tables; Hibernate only validates (`ddl-auto: validate`).
+
 ## Package layout (per service)
 
 ```

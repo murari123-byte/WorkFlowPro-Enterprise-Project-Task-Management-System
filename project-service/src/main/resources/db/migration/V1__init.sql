@@ -1,0 +1,4 @@
+-- V1: baseline migration for project-service.
+-- Intentionally creates no tables: business tables are added as new migrations (V2, V3, ...)
+-- when features are built. Applying this proves Flyway is wired to project_db and creates
+-- the flyway_schema_history table.

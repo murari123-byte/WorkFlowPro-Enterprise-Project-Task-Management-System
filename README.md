@@ -2,7 +2,7 @@
 
 A Java 21 / Spring Boot microservices project with a React + TypeScript frontend.
 
-> **Status:** Phase 1 (Foundation) — Step 1 done: project structure + 5 Spring Boot services with health endpoints.
+> **Status:** Phase 1 (Foundation) — Step 2 done: PostgreSQL (Docker) + one database per service + Flyway.
 > No business features yet.
 
 ## Architecture (target for Phase 1)
@@ -25,10 +25,10 @@ Details: [docs/architecture.md](docs/architecture.md)
 | Framework | Spring Boot 4.0.8 |
 | Gateway | Spring Cloud Gateway (Spring Cloud 2025.1.3) |
 | Build | Maven 3.9+ (multi-module) |
-| Database | PostgreSQL 16 + Flyway *(Step 2)* |
+| Database | PostgreSQL 16 (Docker) + Flyway 11 + Spring Data JPA / Hibernate 7 |
 | Security | Spring Security + JWT *(later phase)* |
 | Frontend | React + TypeScript + Axios + React Router, plain CSS *(Step 5)* |
-| Tests | JUnit 5, Mockito, AssertJ |
+| Tests | JUnit 5, Mockito, AssertJ, Testcontainers |
 | API docs | Swagger / OpenAPI *(Step 4)* |
 
 ## Repository layout
@@ -42,6 +42,8 @@ WorkFlowPro/
 ├── task-service/
 ├── notification-service/
 ├── frontend/                # React app (Step 5)
+├── docker-compose.yml       # local PostgreSQL
+├── docker/postgres/init/    # creates one DB + account per service (first start only)
 ├── docs/                    # setup, architecture, config, dependencies, troubleshooting
 ├── .env.example             # all environment variables, no real secrets
 ├── CHANGELOG.md
@@ -50,20 +52,27 @@ WorkFlowPro/
 
 ## Quick start
 
-Prerequisites: Java 21, Maven 3.9+ (Node 20+ and Docker needed from later steps). See [docs/setup.md](docs/setup.md).
+Prerequisites: Java 21, Maven 3.9+, Docker with Compose (Node 20+ from Step 5). See [docs/setup.md](docs/setup.md).
 
 ```bash
-# 1. Build everything and run tests
+# 1. Create your local env file and set real passwords
+cp .env.example .env        # then replace every change-me value
+
+# 2. Start PostgreSQL (port 5440)
+docker compose up -d
+
+# 3. Build everything and run tests (tests use their own throwaway DB)
 mvn clean install
 
-# 2. Start each service in its own terminal
+# 4. Load env vars, then start each service in its own terminal
+set -a; source .env; set +a
 mvn -pl api-gateway spring-boot:run
 mvn -pl auth-service spring-boot:run
 mvn -pl project-service spring-boot:run
 mvn -pl task-service spring-boot:run
 mvn -pl notification-service spring-boot:run
 
-# 3. Check health
+# 5. Check health ("db" component should be UP)
 curl http://localhost:9081/actuator/health
 curl http://localhost:9081/api/auth/ping
 ```

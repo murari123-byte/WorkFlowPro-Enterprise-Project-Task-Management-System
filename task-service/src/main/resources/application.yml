@@ -2,6 +2,22 @@ spring:
   application:
     name: task-service
 
+  # This service's own database. Password has NO default: it must come from the environment (.env).
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5440}/${TASK_DB_NAME:task_db}
+    username: ${TASK_DB_USER:task_user}
+    password: ${TASK_DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema. Hibernate only checks that entities match the tables.
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
 server:
   port: ${TASK_SERVICE_PORT:9083}
 
