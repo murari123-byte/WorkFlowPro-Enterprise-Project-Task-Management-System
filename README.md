@@ -53,33 +53,32 @@ WorkFlowPro/
 
 ## Quick start
 
-Prerequisites: Java 21, Maven 3.9+, Docker with Compose (Node 20+ from Step 5). See [docs/setup.md](docs/setup.md).
+Full step-by-step guide with every command: **[docs/setup.md](docs/setup.md)**.
+
+Prerequisites: Java 21, Maven 3.9+, Docker with Compose (without sudo), openssl.
 
 ```bash
-# 1. Create your local env file and set real passwords
-cp .env.example .env        # then replace every change-me value
+# 1. Create .env and replace every change-me value (JWT_SECRET: openssl rand -base64 48)
+cp .env.example .env
 
 # 2. Start PostgreSQL (port 5440)
 docker compose up -d
 
-# 3. Build everything and run tests (tests use their own throwaway DB)
+# 3. Build everything and run the 105 tests (tests use their own throwaway DB)
 mvn clean install
 
-# 4. Load env vars, then start each service in its own terminal
+# 4. In each terminal: load .env, then start one service
 set -a; source .env; set +a
-mvn -pl api-gateway spring-boot:run
-mvn -pl auth-service spring-boot:run
-mvn -pl project-service spring-boot:run
-mvn -pl task-service spring-boot:run
-mvn -pl notification-service spring-boot:run
+java -jar auth-service/target/auth-service-0.1.0-SNAPSHOT.jar         # 9081
+java -jar project-service/target/project-service-0.1.0-SNAPSHOT.jar   # 9082
+java -jar task-service/target/task-service-0.1.0-SNAPSHOT.jar         # 9083
+java -jar api-gateway/target/api-gateway-0.1.0-SNAPSHOT.jar           # 9080
 
-# 5. Check health ("db" component should be UP)
-curl http://localhost:9081/actuator/health
-curl http://localhost:9081/api/auth/ping
-
-# 6. Same call through the gateway (this is how the React app calls every service)
+# 5. Check health, then log in as the bootstrap admin from .env (see docs/setup.md step 8)
 curl http://localhost:9080/api/auth/ping
 ```
+
+Swagger UI: http://localhost:9081/swagger-ui.html, :9082/swagger-ui.html, :9083/swagger-ui.html
 
 ## API Gateway routes (port 9080)
 

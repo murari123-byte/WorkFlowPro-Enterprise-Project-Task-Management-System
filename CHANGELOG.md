@@ -5,6 +5,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Docs (2026-09-28)
+- `docs/setup.md` rewritten as a tested fresh-machine guide (secrets, bootstrap admin, first API calls,
+  Swagger for all services, migration check). README quick start updated. `docs/PROJECT_STATUS.md` added.
+
 ### Added — Phase 3 / Step 4: Task Service (2026-09-28)
 - Flyway `V2__create_tasks_and_history.sql`: `tasks` (status/priority checks, generated `priority_rank`,
   `@Version`, indexes on (project_id, status), assignee_id, partial index on open tasks' due_date) and
