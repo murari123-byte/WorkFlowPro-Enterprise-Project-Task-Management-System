@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: notification-service
+
+server:
+  port: ${NOTIFICATION_SERVICE_PORT:9084}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

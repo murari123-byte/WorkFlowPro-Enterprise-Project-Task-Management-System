@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: api-gateway
+  # Routes to the backend services are added in Phase 1 / Step 3.
+
+server:
+  port: ${GATEWAY_PORT:9080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
