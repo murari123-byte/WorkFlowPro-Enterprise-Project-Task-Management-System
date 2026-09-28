@@ -1,106 +1,115 @@
 # Configuration
 
-All settings come from `application.yml` in each service. Anything that differs
-between environments (ports, DB credentials, secrets) is read from an environment
-variable with a safe default: `${VARIABLE_NAME:default}`.
+## Where settings live
 
-Secrets have **no** default and must be set in the environment (added in later steps).
+| File | What |
+|---|---|
+| `.env` (from `.env.example`, git-ignored) | every value that differs per machine and every secret |
+| `docker-compose.yml` | the PostgreSQL container (reads `.env` automatically) |
+| `docker/postgres/init/01-create-service-databases.sh` | creates the 3 databases and logins on the first start |
+| `<service>/src/main/resources/application.yml` | Spring Boot settings; values come from env vars as `${VAR:default}` |
+| `<service>/src/test/resources/application-test.yml` | test-only values (test JWT secret, test admin) |
+| `frontend/.env.example` → `frontend/.env.local` | `VITE_API_BASE_URL` for the React app |
+| `pom.xml` (root) | Java, Spring Boot, Spring Cloud and springdoc versions; module list |
 
-## Environment variables
+**Spring Boot does not read `.env` by itself.** Load it in each terminal before starting a service:
+`set -a; source .env; set +a`. Docker Compose reads it automatically.
 
-| Variable | Used by | Default | Added in |
+**Secrets have no default.** A service refuses to start without its DB password and `JWT_SECRET`
+(and `JWT_SECRET` must be at least 32 characters).
+
+## All environment variables
+
+| Variable | Used by | Default | Secret |
 |---|---|---|---|
-| `GATEWAY_PORT` | api-gateway | `9080` | Step 1 |
-| `AUTH_SERVICE_PORT` | auth-service | `9081` | Step 1 |
-| `PROJECT_SERVICE_PORT` | project-service | `9082` | Step 1 |
-| `TASK_SERVICE_PORT` | task-service | `9083` | Step 1 |
-| `NOTIFICATION_SERVICE_PORT` | notification-service | `9084` | Step 1 |
-| `AUTH_SERVICE_URL` | api-gateway | `http://localhost:9081` | Phase 1 / Step 3 |
-| `PROJECT_SERVICE_URL` | api-gateway | `http://localhost:9082` | Phase 1 / Step 3 |
-| `TASK_SERVICE_URL` | api-gateway | `http://localhost:9083` | Phase 1 / Step 3 |
-| `NOTIFICATION_SERVICE_URL` | api-gateway | `http://localhost:9084` | Phase 1 / Step 3 |
-| `CORS_ALLOWED_ORIGINS` | api-gateway | `http://localhost:5173` (comma-separated list) | Phase 1 / Step 3 |
-| `DB_HOST` | all business services | `localhost` | Step 2 |
-| `DB_PORT` | all business services, docker-compose | `5440` | Step 2 |
-| `POSTGRES_ADMIN_USER` | docker-compose (superuser) | *none — required* | Step 2 |
-| `POSTGRES_ADMIN_PASSWORD` | docker-compose (superuser) | *none — required, secret* | Step 2 |
-| `AUTH_DB_NAME` / `AUTH_DB_USER` | auth-service, init script | `auth_db` / `auth_user` | Step 2 |
-| `AUTH_DB_PASSWORD` | auth-service, init script | *none — required, secret* | Step 2 |
-| `PROJECT_DB_NAME` / `PROJECT_DB_USER` | project-service, init script | `project_db` / `project_user` | Step 2 |
-| `PROJECT_DB_PASSWORD` | project-service, init script | *none — required, secret* | Step 2 |
-| `TASK_DB_NAME` / `TASK_DB_USER` | task-service, init script | `task_db` / `task_user` | Step 2 |
-| `TASK_DB_PASSWORD` | task-service, init script | *none — required, secret* | Step 2 |
-| `NOTIFICATION_DB_NAME` / `NOTIFICATION_DB_USER` | notification-service, init script | `notification_db` / `notification_user` | Step 2 |
-| `NOTIFICATION_DB_PASSWORD` | notification-service, init script | *none — required, secret* | Step 2 |
-| `JWT_SECRET` | auth-service | *none — required, secret, min 32 chars* | Phase 2 / Step 1 |
-| `JWT_ISSUER` | auth-service | `workflowpro-auth` | Phase 2 / Step 1 |
-| `JWT_ACCESS_TOKEN_TTL` | auth-service | `15m` | Phase 2 / Step 1 |
-| `JWT_REFRESH_TOKEN_TTL` | auth-service | `7d` | Phase 2 / Step 1 |
-| `SWAGGER_ENABLED` | auth-service | `true` (set `false` in production) | Phase 2 / Step 1 |
+| `GATEWAY_PORT` | api-gateway | `9080` | |
+| `AUTH_SERVICE_PORT` | auth-service | `9081` | |
+| `PROJECT_SERVICE_PORT` | project-service | `9082` | |
+| `TASK_SERVICE_PORT` | task-service | `9083` | |
+| `AUTH_SERVICE_URL` | api-gateway, project-service, task-service | `http://localhost:9081` | |
+| `PROJECT_SERVICE_URL` | api-gateway, task-service | `http://localhost:9082` | |
+| `TASK_SERVICE_URL` | api-gateway, project-service | `http://localhost:9083` | |
+| `CORS_ALLOWED_ORIGINS` | api-gateway (comma-separated) | `http://localhost:5173` | |
+| `DB_HOST` | auth, project, task services | `localhost` | |
+| `DB_PORT` | auth, project, task services; docker-compose (host port) | `5440` | |
+| `POSTGRES_ADMIN_USER` | docker-compose (PostgreSQL superuser, only for the init script and troubleshooting) | — required | |
+| `POSTGRES_ADMIN_PASSWORD` | docker-compose | — required | ✅ |
+| `AUTH_DB_NAME`, `AUTH_DB_USER` | auth-service, init script | `auth_db`, `auth_user` | |
+| `AUTH_DB_PASSWORD` | auth-service, init script | — required | ✅ |
+| `PROJECT_DB_NAME`, `PROJECT_DB_USER` | project-service, init script | `project_db`, `project_user` | |
+| `PROJECT_DB_PASSWORD` | project-service, init script | — required | ✅ |
+| `TASK_DB_NAME`, `TASK_DB_USER` | task-service, init script | `task_db`, `task_user` | |
+| `TASK_DB_PASSWORD` | task-service, init script | — required | ✅ |
+| `JWT_SECRET` | auth-service (signs), project- and task-service (verify) — **same value everywhere** | — required, min 32 chars | ✅ |
+| `JWT_ISSUER` | auth, project, task services | `workflowpro-auth` | |
+| `JWT_ACCESS_TOKEN_TTL` | auth-service | `15m` | |
+| `JWT_REFRESH_TOKEN_TTL` | auth-service | `7d` | |
+| `BOOTSTRAP_ADMIN_EMAIL` | auth-service (first ADMIN; empty = skip) | empty | |
+| `BOOTSTRAP_ADMIN_PASSWORD` | auth-service | empty | ✅ |
+| `BOOTSTRAP_ADMIN_FIRST_NAME`, `BOOTSTRAP_ADMIN_LAST_NAME` | auth-service | `System`, `Admin` | |
+| `SWAGGER_ENABLED` | auth, project, task services | `true` (set `false` in production) | |
+| `VITE_API_BASE_URL` | frontend (`frontend/.env.local`) | `http://localhost:9080` | never put secrets here |
 
-Durations use Spring Boot format: `15m`, `1h`, `7d`, `30s`.
+Durations use Spring Boot format: `30s`, `15m`, `1h`, `7d`.
 
-Docker Compose reads `.env` automatically. Spring Boot does not: run `set -a; source .env; set +a`
-in the terminal before starting a service.
+Changing a DB name/user/password in `.env` **after** the first `docker compose up` does not change the
+existing database volume — the init script only runs on an empty volume (reset: `docker compose down -v`).
 
-Changing a DB name/user/password in `.env` **after** the first `docker compose up` has no effect on the
-existing volume — the init script only runs on an empty volume. See troubleshooting.
-
-## Database settings (business services)
+## application.yml — explained (task-service; auth and project are the same shape)
 
 ```yaml
 spring:
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5440}/${AUTH_DB_NAME:auth_db}
-    username: ${AUTH_DB_USER:auth_user}
-    password: ${AUTH_DB_PASSWORD}      # no default on purpose
+  datasource:                                  # this service's own database
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5440}/${TASK_DB_NAME:task_db}
+    username: ${TASK_DB_USER:task_user}
+    password: ${TASK_DB_PASSWORD}              # no default on purpose
   jpa:
-    open-in-view: false                # no lazy-loading from controllers
-    hibernate.ddl-auto: validate       # Flyway owns the schema
+    open-in-view: false                        # no lazy loading after the service layer
+    properties:
+      hibernate.default_batch_fetch_size: 50   # lazy collections for up to 50 rows in one query (no N+1)
+    hibernate:
+      ddl-auto: validate                       # Flyway owns the schema; Hibernate only checks it
   flyway:
     enabled: true
     locations: classpath:db/migration
-```
 
-## JWT settings (auth-service)
-
-```yaml
 app:
   jwt:
-    secret: ${JWT_SECRET}                          # no default, validated: min 32 characters
+    secret: ${JWT_SECRET}                      # bound to common JwtProperties (validated, min 32 chars)
     issuer: ${JWT_ISSUER:workflowpro-auth}
-    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
-    refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:7d}
-```
-Bound to the `JwtProperties` record (`@Validated`). Generate a secret with `openssl rand -base64 48`.
+  services:                                    # direct service-to-service URLs (not through the gateway)
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:9081}
+    project-url: ${PROJECT_SERVICE_URL:http://localhost:9082}
 
-## Gateway routes and CORS (api-gateway)
+springdoc:
+  api-docs.enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}
+    path: /swagger-ui.html
 
-Property prefix in Spring Cloud Gateway 5 (2025.1.x) is `spring.cloud.gateway.server.webflux.*`
-(the old `spring.cloud.gateway.routes` no longer works).
+server:
+  port: ${TASK_SERVICE_PORT:9083}
 
-```yaml
-spring.cloud.gateway.server.webflux:
-  routes:
-    - id: auth-service
-      uri: ${AUTH_SERVICE_URL:http://localhost:9081}
-      predicates: [ Path=/api/auth/** ]
-    # ... same for projects, tasks, notifications
-  globalcors:
-    cors-configurations:
-      '[/**]':
-        allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
-        allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allowed-headers: Authorization,Content-Type
-        max-age: 3600
-```
-
-## Actuator
-
-Every service exposes only `health` and `info` over HTTP:
-```yaml
 management:
-  endpoints.web.exposure.include: health,info
-  endpoint.health.show-details: always
+  endpoints.web.exposure.include: health,info  # only these actuator endpoints over HTTP
+  endpoint.health.show-details: when-authorized  # anonymous callers see only UP/DOWN
 ```
-`show-details: always` is fine for local development; it will be restricted before any real deployment.
+
+Differences per service:
+- **auth-service** adds `app.jwt.access-token-ttl`, `app.jwt.refresh-token-ttl` (bound to `TokenProperties`)
+  and `app.bootstrap-admin.*` (bound to `BootstrapAdminProperties`). It has no `app.services`.
+- **project-service** has `app.services.auth-url` and `app.services.task-url` (`ServiceUrlsProperties`).
+- **task-service** has `app.services.auth-url` and `app.services.project-url`.
+- **api-gateway** has routes and CORS under `spring.cloud.gateway.server.webflux.*` (the property prefix of
+  Spring Cloud Gateway 5; the old `spring.cloud.gateway.routes` is ignored). See [microservices.md](microservices.md).
+
+## Fixed values in code (not configurable)
+
+| Value | Where |
+|---|---|
+| Service-to-service timeouts: 2 s connect, 5 s read | `common` `ServiceClients` |
+| Max page size 100 | `common` `Paging.MAX_PAGE_SIZE` |
+| Max ids per user batch lookup 100 | auth-service `UserService.MAX_BATCH_SIZE` |
+| BCrypt strength 10 | auth-service `SecurityConfig.passwordEncoder` |
+| "Today" for overdue = UTC date | task-service `ClientConfig.clock` |
+| Refresh token size 32 random bytes | auth-service `RefreshTokenService` |

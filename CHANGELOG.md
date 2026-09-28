@@ -3,7 +3,34 @@
 All notable changes to this project are recorded here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## Development history (summary, oldest first)
+
+| # | Step | Main result |
+|---|---|---|
+| 1 | Phase 1 / Step 1 — project setup | Maven multi-module, 5 Spring Boot services with health + ping, ports 9080–9084 |
+| 2 | Phase 1 / Step 2 — database | PostgreSQL 16 in Docker (5440), one database + login per service, Flyway V1 baselines, Testcontainers tests |
+| 3 | Phase 2 / Step 1 — authentication | register/login/refresh/logout, JWT HS256, hashed single-use refresh tokens, BCrypt, global error handling, Swagger |
+| 4 | Phase 1 / Step 3 — API Gateway | routes, CORS, 503 handler |
+| 5 | Phase 3 / Step 1 — `common` library | shared errors, JWT verification, paging; auth-service refactored onto it |
+| 6 | Phase 3 / Step 2 — users | profile, password change, user search, admin roles/status, bootstrap admin |
+| 7 | Phase 3 / Step 3 — projects | project CRUD, members, manager, workflow, stats (Flyway V2 project_db) |
+| 8 | Phase 3 / Step 4 — tasks | task CRUD, assignment, workflow, history, search/filter/sort/paging, overdue, stats (Flyway V2 task_db) |
+| 9 | Phase 3 / Step 5 — frontend | React 19 + TypeScript app: auth, dashboard, projects, tasks, profile, admin; browser-tested |
+| 10 | Final code review | security (login timing, health details), downstream 401/403, N+1, `open` filter, frontend fixes; removed `notification-service` and `/api/auth/me` |
+| 11 | Documentation audit | all docs compared with the code; new microservices, database, migrations, testing, interview-preparation docs |
+
+Detailed entries follow, newest first.
+
+## [0.1.0] — 2026-09-28
+
+### Docs — documentation audit (2026-09-28)
+- README rewritten as the full entry point. New: `docs/microservices.md`, `docs/database.md`, `docs/testing.md`,
+  `docs/interview-preparation.md`. `docs/database-migrations.md` renamed to `docs/migrations.md`.
+  Rewritten to match the code: architecture, authentication, api (all 37 endpoints), configuration,
+  dependencies, troubleshooting, PROJECT_STATUS (with the tested verification checklist).
+- Corrections: removed mentions of notification-service and `/api/auth/me`; JUnit Jupiter 6 (not 5);
+  105 tests; health output without details; JWT/URL variables used by several services;
+  `allowedStatuses` in workflow order.
 
 ### Code review fixes (2026-09-28)
 - Security: login now checks the password against a dummy BCrypt hash when the email is unknown, so

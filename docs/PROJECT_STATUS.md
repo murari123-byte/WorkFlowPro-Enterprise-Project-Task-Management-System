@@ -1,144 +1,103 @@
 # Project Status
 
-Last updated: 2026-09-28
-
-This page is the honest, current state of WorkFlowPro: what is built and tested, what is only
-partly built, and what is still to do. Read this first.
+Last updated: 2026-09-28 (after the final code review and documentation audit).
 
 ## Summary
 
 | Part | Status |
 |---|---|
-| API Gateway | ✅ Done and tested |
-| Auth Service | ✅ Done and tested |
-| Project Service | ✅ Done and tested |
-| Task Service | ✅ Done and tested |
-| `common` shared library | ✅ Done and tested |
-| PostgreSQL + Flyway | ✅ Done (one database per service) |
-| Backend tests | ✅ 105 tests, all passing (`mvn clean install`) |
-| React frontend | ✅ Done — builds, lint clean, 21-step browser test passed |
-| Documentation audit, interview prep, resume section | ❌ Not started |
-| notification-service | ⚪ Empty scaffold (ping only). The final architecture does not use it — decide whether to delete it |
+| API Gateway | ✅ done, tested |
+| Auth Service | ✅ done, tested |
+| Project Service | ✅ done, tested |
+| Task Service | ✅ done, tested |
+| `common` shared library | ✅ done, tested |
+| PostgreSQL + Flyway (3 databases, 7 migrations) | ✅ done, verified |
+| React frontend | ✅ done, build + lint clean, 21-step browser run passed |
+| Backend tests | ✅ 105 passing |
+| Documentation | ✅ audited against the code (see below) |
 
-## What is done
+## Final verification checklist
 
-### Infrastructure
-- Maven multi-module project: `common`, `api-gateway`, `auth-service`, `project-service`,
-  `task-service`, `notification-service`.
-- Java 21, Spring Boot 4.0.8, Spring Cloud 2025.1.3, springdoc-openapi 3.0.3.
-- PostgreSQL 16 in Docker (`docker-compose.yml`, port **5440**). On first start the init script
-  creates `auth_db`, `project_db`, `task_db`, `notification_db`, each with its own account.
-  An account can only connect to its own database.
-- Services run on ports **9080–9084** (8080–8084 were already taken on the dev machine).
-- All secrets come from `.env` (see `.env.example`). Nothing secret is in the code.
+Every item was checked by actually running it on 2026-09-28, after the code review fixes.
 
-### API Gateway (port 9080)
-- Routes: `/api/auth/**` and `/api/users/**` → auth-service, `/api/projects/**` → project-service,
-  `/api/tasks/**` → task-service, `/api/notifications/**` → notification-service.
-- CORS only at the gateway (`CORS_ALLOWED_ORIGINS`, default `http://localhost:5173`).
-- A service that is down returns `503` JSON instead of `500`.
+- [x] **Frontend works** — `npm run build` and `npm run lint` clean (also in a fresh clone); 21-step Playwright browser run passed with no console errors
+- [x] **API Gateway works** — routes to all 3 services, CORS allow/deny, 503 when a service is down, 404 for removed routes (tests + live curl)
+- [x] **Auth Service works** — register, login, refresh, logout, profile, password change, user admin (tests + browser run)
+- [x] **Project Service works** — create, edit, status, members, manager, delete guard, stats (tests + browser run)
+- [x] **Task Service works** — create, edit, assign, status workflow, history, delete, stats (tests + browser run)
+- [x] **PostgreSQL works** — container healthy, 3 databases, each login can only open its own database
+- [x] **Flyway migrations work** — auth_db V1–V3, project_db V1–V2, task_db V1–V2, all `success = t` (documented command run as written); version checked in tests on fresh databases
+- [x] **JWT/RBAC works** — tampered/missing token 401, wrong role 403, non-member 404, client-sent roles ignored, assignee cannot complete (tests + browser run)
+- [x] **Projects work** — see Project Service
+- [x] **Tasks work** — see Task Service
+- [x] **Search/filter/pagination work** — projects, tasks (incl. priority sort by rank, `open`, `overdue`), users; bad sort → 400 (tests + browser run)
+- [x] **Dashboard works** — stat cards and charts load, numbers change after actions (browser run; stats endpoints tested)
+- [x] **Tests pass** — `mvn clean install`: 105 tests, 0 failures
+- [x] **Swagger works** — UI and `/v3/api-docs` return 200 on 9081, 9082, 9083
+- [x] **Documentation complete** — every file below compared with the code; links checked; setup and API walk-through commands run as written
 
-### Auth Service (port 9081, `auth_db`)
-- Register, login, refresh, logout, current user.
-- JWT access tokens (HS256, 15 min) with `sub`, `email`, `roles` claims.
-- Refresh tokens: random, stored only as a SHA-256 hash, single use (rotation). Reusing an old one
-  signs the user out everywhere.
-- BCrypt password hashing. New users always get `EMPLOYEE`; roles sent by the client are ignored.
-- Users API: profile, change password, user search (paged, safe sorting), batch lookup for other
-  services, ADMIN role and enable/disable management (an admin cannot lock themselves out).
-- First ADMIN is created on startup from `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD`.
-- Flyway: `V1__init`, `V2__create_users_and_roles` (seeds 4 roles), `V3__create_refresh_tokens`.
+Not verified automatically: editing an **overdue** task in the UI (needs a task whose due date has passed —
+checked by code review and the TypeScript build only). See [testing.md](testing.md#not-covered-by-automated-tests).
 
-### Project Service (port 9082, `project_db`)
-- Create, list (search, status, manager filter, sort, paging), view, update, delete.
-- Members: add and remove. Manager: ADMIN can reassign. The manager is always a member.
-- Status workflow: `PLANNING → ACTIVE ⇄ ON_HOLD → COMPLETED`; any open status → `CANCELLED`.
-  Completed and cancelled projects are read-only.
-- Rules: ADMIN and PROJECT_MANAGER create projects; members can view (others get 404);
-  only the manager or an ADMIN can change a project; a project with tasks cannot be deleted.
-- Dashboard numbers: `GET /api/projects/stats`.
-- Internal endpoints for task-service: `/api/projects/accessible`, `/api/projects/{id}/membership`.
-- Flyway: `V1__init`, `V2__create_projects` (`projects`, `project_members`).
+## What was built
 
-### Task Service (port 9083, `task_db`)
-- Create, search (project, text, status, priority, assignee, overdue, sort, paging), view,
-  update, delete, assign/unassign, status change.
-- Status workflow: `TODO ⇄ IN_PROGRESS ⇄ IN_REVIEW → COMPLETED`, cancel, reopen, restore.
-- Rules: project manager, TEAM_LEAD members and ADMIN create/edit/assign; the assignee can only move
-  their own task between TODO / IN_PROGRESS / IN_REVIEW; only manager or ADMIN delete;
-  assignee must be a project member; tasks only change while the project is PLANNING or ACTIVE.
-- Overdue detection: due date before today (UTC) and task still open.
-- Task history (activity timeline): created, updated, assigned, status/priority/due date changed.
-- Dashboard numbers: `GET /api/tasks/stats` (total, pending, completed, overdue, my open tasks,
-  by status, by priority).
-- Flyway: `V1__init`, `V2__create_tasks_and_history` (`tasks`, `task_history`).
-
-### Shared `common` module
-- One error format (`ErrorResponse`) and one `GlobalExceptionHandler` for every service.
-- JWT verification config, JSON 401/403 handler, `AuthenticatedUser`.
-- `PageResponse` (paged JSON shape) and `Paging` (page size limit, sort whitelist).
-- `ServiceClients` (timeouts, caller's token passed on, network errors → 503) and `UserDirectoryClient`.
-
-### Tests (all passing)
-| Module | Tests |
+| Area | Contents |
 |---|---|
-| common | 8 |
-| api-gateway | 12 |
-| auth-service | 33 |
-| project-service | 32 |
-| task-service | 17 |
-| notification-service | 3 |
+| Infrastructure | Maven multi-module; Docker Compose PostgreSQL 16 on 5440; init script for 3 databases; `.env` for all secrets |
+| Gateway | routes, CORS, 503 handler |
+| Auth | JWT (HS256) + single-use hashed refresh tokens with reuse detection, BCrypt, 4 roles, profile, user admin, bootstrap admin |
+| Projects | CRUD, members, manager, workflow, read-only when closed, delete guard, stats, internal endpoints for task-service |
+| Tasks | CRUD, assignment, workflow with assignee/lead rules, overdue, history, search/filter/sort/paging, stats |
+| common | error format + handler, JWT verification, `AuthenticatedUser`, `PageResponse`, `Paging`, `ServiceClients`, `UserDirectoryClient` |
+| Frontend | 12 pages, Axios client with token refresh, protected/role routes, states, validation, responsive CSS |
+| Docs | README + 14 files in `docs/` |
 
-Unit tests use JUnit 5 + Mockito. Integration tests use MockMvc with a real PostgreSQL started by
-Testcontainers, and real signed JWTs.
+Details per service: [microservices.md](microservices.md). History: [CHANGELOG.md](../CHANGELOG.md).
 
-## Frontend (`frontend/`) — done
+## Documentation audit (2026-09-28)
 
-Vite + React 19 + TypeScript + Axios + React Router 7, plain CSS. Full description: [frontend.md](frontend.md).
+Method: listed every controller mapping, env var, migration, dependency and test class from the code and
+compared them with the docs; ran the setup, migration-check and API walk-through commands exactly as written;
+checked every relative link; built a fresh clone with only the README steps.
 
-- Pages: login, register, dashboard (8 stat cards, 3 bar charts, my tasks), projects list, project
-  details (status, members, manager, tasks), project form, tasks list, task details (status, assign,
-  activity timeline), task form, profile (name, password), admin users (roles, enable/disable), not found.
-- Axios client adds the token and refreshes it once on 401; the session survives a page reload.
-- Protected and role-based routes; buttons follow the permissions the API returns.
-- Search, filters, sorting and pagination on projects, tasks and users; debounced search boxes.
-- Loading, error (with retry), empty states; form validation matching the backend rules.
-- Responsive: collapsible menu, tables become cards on phones.
-- Verified: `npm run build` and `npm run lint` pass; a Playwright browser run of 21 steps against the real
-  backend passed with no console errors. Two bugs found by it were fixed (see frontend.md).
+| File | Result |
+|---|---|
+| README.md | rewritten: overview, features, architecture, services, stack, folder structure, DB design, auth flow, API communication, setup, env vars, Flyway, running, testing, Swagger, docs index, limitations |
+| CHANGELOG.md | complete history; review fixes and removals recorded |
+| .env.example | all 30 variables; each is used by the code, and every variable the code uses is listed |
+| docs/setup.md | updated for 3 databases, new health check, migrations loop; commands re-run |
+| docs/architecture.md | rewritten: decisions and why, request flow, layers, ports, limitations, future improvements |
+| docs/microservices.md | **new**: each service's features, rules, classes, tests; removed module recorded |
+| docs/database.md | **new**: every table, column, constraint, index and relationship |
+| docs/migrations.md | renamed from `database-migrations.md`; every migration, order, run/verify/add |
+| docs/authentication.md | rewritten: flow, JWT, refresh tokens, passwords, roles, full permission matrix, security checklist |
+| docs/api.md | rewritten: all 37 endpoints with bodies, responses, errors, paging/sort fields, walk-through |
+| docs/frontend.md | updated: open-tasks filter, review fixes |
+| docs/testing.md | **new**: every test class and what it covers, tools, gaps |
+| docs/troubleshooting.md | updated: removed routes, 404/409/422 meanings, frontend problems, snap Docker |
+| docs/configuration.md | rewritten: every env var and config file, yml explained, fixed values |
+| docs/dependencies.md | rewritten with versions and "why" |
+| docs/interview-preparation.md | **new**: 2- and 5-minute explanations, 15 topic explanations, 36 Q&A, resume section |
 
-## What remains to finish the project
+Mismatches found and fixed during the audit: docs still described `notification-service`, `/api/auth/me`,
+"JUnit 5" (the build uses JUnit Jupiter 6), 40 tests (now 105), health details in the public output,
+JWT variables as "auth-service only", and `allowedStatuses` in alphabetical order (it is workflow order).
 
-1. ~~Frontend pages~~ — done.
-2. ~~Frontend wiring and styles~~ — done.
-3. ~~End-to-end check~~ — done (21-step browser run, see frontend.md).
-4. **Final code review:** bugs, security, validation, duplicate code, indexes, API consistency.
-5. **Documentation audit:** create `docs/microservices.md`, `docs/database.md`,
-   `docs/testing.md`, `docs/interview-preparation.md` (with 30–40 Q&A and a resume section);
-   rename `docs/database-migrations.md` to `docs/migrations.md`; bring README, `docs/api.md`,
-   `docs/authentication.md` and `docs/architecture.md` up to date with the project, task and users APIs.
-6. **Decide on notification-service:** delete it (the final architecture has no notifications) or keep it.
-7. **Not built (requested earlier, later marked out of scope):** Kanban board, task comments,
-   organizations/teams.
+## What remains (optional, not required for the project to be complete)
+
+- Future improvements listed in [architecture.md](architecture.md#future-improvements) (RS256, HttpOnly
+  refresh cookie, token cleanup job, Docker images for all services, circuit breaker).
+- Commit the Playwright browser script as `frontend/e2e` and add React component tests.
+- Features requested earlier but left out by the final scope: Kanban board with drag and drop, task
+  comments, organizations/teams, notifications.
 
 ## How to run it
 
+See [setup.md](setup.md) (full) or the README quick start. In short:
 ```bash
-git clone https://github.com/murari123-byte/WorkFlowPro-Enterprise-Project-Task-Management-System.git WorkFlowPro
-cd WorkFlowPro
-cp .env.example .env          # replace every change-me value (openssl rand -base64 48 for JWT_SECRET)
-docker compose up -d          # PostgreSQL on port 5440
-mvn clean install             # builds everything and runs all tests (Docker must be running)
-
-# in one terminal per service:
-set -a; source .env; set +a
-java -jar api-gateway/target/api-gateway-0.1.0-SNAPSHOT.jar
-java -jar auth-service/target/auth-service-0.1.0-SNAPSHOT.jar
-java -jar project-service/target/project-service-0.1.0-SNAPSHOT.jar
-java -jar task-service/target/task-service-0.1.0-SNAPSHOT.jar
+cp .env.example .env            # fill in secrets
+docker compose up -d
+mvn clean install
+set -a; source .env; set +a     # in each service terminal, then start the 4 jars (see setup.md step 6)
+cd frontend && npm install && npm run dev    # http://localhost:5173
 ```
-
-Swagger UI: `http://localhost:9081/swagger-ui.html`, `:9082/swagger-ui.html`, `:9083/swagger-ui.html`.
-
-Frontend (new terminal): `cd frontend && npm install && npm run dev` → http://localhost:5173.
-Sign in as the bootstrap admin from your `.env`. Full guide: [setup.md](setup.md).

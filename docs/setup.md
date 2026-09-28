@@ -52,13 +52,12 @@ Now open `.env` and replace **every** value that starts with `change-me`:
 | `AUTH_DB_PASSWORD` | any strong password | `openssl rand -hex 16` |
 | `PROJECT_DB_PASSWORD` | any strong password | `openssl rand -hex 16` |
 | `TASK_DB_PASSWORD` | any strong password | `openssl rand -hex 16` |
-| `NOTIFICATION_DB_PASSWORD` | any strong password | `openssl rand -hex 16` |
 | `JWT_SECRET` | **at least 32 characters**; the same value is used by every service | `openssl rand -base64 48` |
 | `BOOTSTRAP_ADMIN_PASSWORD` | password for the first ADMIN login (8+ characters) | choose one you will remember |
 
 Optional shortcut — fill all of them automatically (Linux):
 ```bash
-for v in POSTGRES_ADMIN_PASSWORD AUTH_DB_PASSWORD PROJECT_DB_PASSWORD TASK_DB_PASSWORD NOTIFICATION_DB_PASSWORD; do
+for v in POSTGRES_ADMIN_PASSWORD AUTH_DB_PASSWORD PROJECT_DB_PASSWORD TASK_DB_PASSWORD; do
   sed -i "s|^$v=.*|$v=$(openssl rand -hex 16)|" .env
 done
 sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n' | tr '/+' '_-')|" .env
@@ -77,7 +76,7 @@ docker compose up -d
 docker compose ps                  # STATUS must show (healthy)
 docker logs workflowpro-postgres | grep "Creating database"
 ```
-The last command should list 4 databases: `auth_db`, `project_db`, `task_db`, `notification_db`.
+The last command should list 3 databases: `auth_db`, `project_db`, `task_db`.
 They are created only on the **first** start. PostgreSQL listens on port **5440**.
 
 If you change a database password in `.env` later, the old one stays in the database. Reset
@@ -114,8 +113,6 @@ java -jar api-gateway/target/api-gateway-0.1.0-SNAPSHOT.jar            # port 90
 ```
 (`mvn -pl auth-service spring-boot:run` also works after step 5.)
 
-notification-service (9084) is an empty placeholder and does not need to run.
-
 On startup each service runs its **Flyway migrations** automatically. You will see lines like
 `Successfully applied 2 migrations ... now at version v3`. On the next start it says
 `Schema "public" is up to date`. You never create tables by hand.
@@ -128,17 +125,21 @@ Stop a service with `Ctrl+C`.
 ## 7. Check that everything is up
 
 ```bash
-for p in 9080 9081 9082 9083; do echo "$p $(curl -s localhost:$p/actuator/health | grep -o '"status":"UP"}$')"; done
+for p in 9080 9081 9082 9083; do echo "$p $(curl -s localhost:$p/actuator/health | grep -o '"status":"UP"')"; done
 ```
-Each line must end with `"status":"UP"}`.
+Each line must show `"status":"UP"` (the database is part of this check; details are hidden from anonymous callers).
 
-Check the migrations in the database (example: auth):
+Check the migrations in all three databases:
 ```bash
 set -a; source .env; set +a
-docker exec -e PGPASSWORD=$AUTH_DB_PASSWORD workflowpro-postgres \
-  psql -U $AUTH_DB_USER -d $AUTH_DB_NAME -c 'select version, description, success from flyway_schema_history order by installed_rank'
+for db in AUTH PROJECT TASK; do
+  u=${db}_DB_USER; p=${db}_DB_PASSWORD; n=${db}_DB_NAME
+  echo "== ${!n}"
+  docker exec -e PGPASSWORD=${!p} workflowpro-postgres psql -U ${!u} -d ${!n} \
+    -c 'select version, description, success from flyway_schema_history order by installed_rank'
+done
 ```
-Expected versions: auth_db 1–3, project_db 1–2, task_db 1–2. See [database-migrations.md](database-migrations.md).
+Expected versions: auth_db 1–3, project_db 1–2, task_db 1–2. See [migrations.md](migrations.md).
 
 ## 8. Try it (through the gateway, like the frontend will)
 

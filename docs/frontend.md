@@ -64,12 +64,12 @@ frontend/src/
 |---|---|---|
 | `/login` | Sign in | everyone |
 | `/register` | Create account (always EMPLOYEE) | everyone |
-| `/` | Dashboard: 8 stat cards, tasks by status/priority, projects by status, my tasks | logged in |
+| `/` | Dashboard: 8 stat cards, tasks by status/priority, projects by status, my 5 open tasks due soonest (`GET /api/tasks?assigneeId=me&open=true&sort=dueDate,asc`) | logged in |
 | `/projects` | Project list: search, status filter, sort, pagination | logged in |
 | `/projects/new` | Create project | ADMIN, PROJECT_MANAGER |
 | `/projects/:id` | Details, status buttons, members (add/remove), change manager (ADMIN), project tasks | members |
 | `/projects/:id/edit` | Edit project | manager or ADMIN |
-| `/tasks` | All my projects' tasks: search, status, priority, "assigned to me", overdue, sort, pagination | logged in |
+| `/tasks` | All my projects' tasks: search, status, priority, "assigned to me", overdue, sort, pagination (`?mine=1` pre-ticks "assigned to me") | logged in |
 | `/tasks/new?projectId=…` | Create task (with assignee) | project manager, TEAM_LEAD member, ADMIN |
 | `/tasks/:id` | Details, status buttons, assign, activity timeline | project members |
 | `/tasks/:id/edit` | Edit title, description, priority, due date | project manager, TEAM_LEAD member, ADMIN |
@@ -147,7 +147,7 @@ would put the refresh token in an `HttpOnly` cookie — listed under future impr
   (each cell shows its column name through `data-label`).
 - < 480 px: one stat card per row.
 
-## How it was verified (2026-09-28)
+## How it was verified (2026-09-28, repeated after the code review)
 
 `npm run build` (TypeScript + Vite) and `npm run lint` pass with no warnings.
 
@@ -165,3 +165,9 @@ Bugs found and fixed during that run:
   name. They are now outside the label.
 - The edit forms (task, project) could be reset to old values by a late second load (React StrictMode
   runs effects twice in development; a slow network can do the same). Late answers are now ignored.
+
+Found in the code review:
+- Editing an overdue task failed validation because its (unchanged) due date was in the past. Now only a
+  new or changed due date must be today or later — the same rule as the backend.
+- Dashboard "My tasks" filtered finished tasks in the browser and could show fewer than 5; it now asks the
+  API for open tasks only (`open=true`).
