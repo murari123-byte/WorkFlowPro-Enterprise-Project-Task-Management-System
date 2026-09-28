@@ -10,7 +10,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * {@code @ServiceConnection} points the datasource at it, so tests never touch the dev database.
  */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
     @Bean
     @ServiceConnection

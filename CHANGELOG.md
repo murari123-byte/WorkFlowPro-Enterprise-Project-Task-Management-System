@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3 / Step 3: Project Service (2026-09-28)
+- Flyway `V2__create_projects.sql`: `projects` (status check, date check, `@Version` column,
+  unique `LOWER(name)`), `project_members` (composite PK, FK with cascade, index on `user_id`).
+- Endpoints under `/api/projects`: create (ADMIN, PROJECT_MANAGER), list (search, status, manager filter,
+  paging, whitelisted sort), get, update, `PATCH /{id}/status`, `PUT /{id}/manager` (ADMIN),
+  `POST/DELETE /{id}/members`, delete, `/stats`, and `/accessible` + `/{id}/membership` for task-service.
+- Workflow `PLANNING → ACTIVE ⇄ ON_HOLD → COMPLETED`, any open status → `CANCELLED`; closed projects read-only.
+- Rules: members see a project (others get 404), only its manager or ADMIN edits it, manager must be
+  PROJECT_MANAGER/ADMIN, manager cannot be removed, project with tasks cannot be deleted (409).
+- `UserClient` (auth-service, batch lookups — one call per page, not per row), `TaskClient`;
+  common `ServiceClients` (2 s connect / 5 s read timeout, token relay, network errors → 503).
+- Swagger UI at `:9082/swagger-ui.html`. Env vars used: `JWT_SECRET`, `JWT_ISSUER`, `AUTH_SERVICE_URL`,
+  `TASK_SERVICE_URL`, `SWAGGER_ENABLED`.
+- Tests: `ProjectStatusTest`, `ProjectServiceTest` (Mockito), `ProjectControllerIntegrationTest`
+  (MockMvc + Testcontainers + `@MockitoBean` clients + real signed test tokens).
+
 ### Added — Phase 3 / Step 2: Users API in auth-service (2026-09-28)
 - `GET/PUT /api/users/me`, `PUT /api/users/me/password` (revokes all refresh tokens).
 - `GET /api/users` search (ADMIN, PROJECT_MANAGER, TEAM_LEAD): text, role filter, paging, whitelisted sort;
