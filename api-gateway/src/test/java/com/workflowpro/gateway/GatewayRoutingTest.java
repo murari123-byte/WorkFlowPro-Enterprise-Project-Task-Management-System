@@ -57,7 +57,7 @@ class GatewayRoutingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/auth/ping", "/api/projects/ping", "/api/tasks/ping", "/api/notifications/ping"})
+    @ValueSource(strings = {"/api/auth/ping", "/api/users/me", "/api/projects/ping", "/api/tasks/ping", "/api/notifications/ping"})
     void forwardsEachServicePathUnchanged(String path) {
         client.get().uri(path).exchange()
                 .expectStatus().isOk()

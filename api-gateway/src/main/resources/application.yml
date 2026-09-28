@@ -11,7 +11,7 @@ spring:
             - id: auth-service
               uri: ${AUTH_SERVICE_URL:http://localhost:9081}
               predicates:
-                - Path=/api/auth/**
+                - Path=/api/auth/**,/api/users/**
             - id: project-service
               uri: ${PROJECT_SERVICE_URL:http://localhost:9082}
               predicates:

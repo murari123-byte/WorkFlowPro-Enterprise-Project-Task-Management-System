@@ -12,9 +12,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-    /** Test-only signing key. Real keys come from the JWT_SECRET environment variable. */
-    public static final String TEST_JWT_SECRET_PROPERTY = "app.jwt.secret=test-only-secret-not-used-anywhere-else-1234567890";
-
     @Bean
     @ServiceConnection
     PostgreSQLContainer postgresContainer() {

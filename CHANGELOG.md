@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3 / Step 2: Users API in auth-service (2026-09-28)
+- `GET/PUT /api/users/me`, `PUT /api/users/me/password` (revokes all refresh tokens).
+- `GET /api/users` search (ADMIN, PROJECT_MANAGER, TEAM_LEAD): text, role filter, paging, whitelisted sort;
+  only ADMIN sees disabled users. `GET /api/users/{id}`, `GET /api/users/batch?ids=` for other services.
+- `PUT /api/users/{id}/roles`, `PUT /api/users/{id}/status` (ADMIN). An admin cannot remove their own
+  ADMIN role or disable themselves. Disabling revokes the user's refresh tokens.
+- `AdminBootstrap`: first ADMIN from `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` (created once).
+- common: `BadRequestException`, `Paging` helper (page/size limits, sort whitelist).
+- Gateway: `/api/users/**` → auth-service.
+- Tests: `UserServiceTest`, `UserControllerIntegrationTest`, `PagingTest`; auth tests now use
+  `@ActiveProfiles("test")` with `src/test/resources/application-test.yml`.
+
+### Fixed
+- Spring Data JPA 4 rejects `null` in `Specification.allOf(...)`; unused filters now return
+  `Specification.unrestricted()`.
+
 ### Added — Phase 3 / Step 1: shared `common` module (2026-09-28)
 - New Maven module `common` (a library, not a service): `ApiException` + `ResourceNotFoundException`,
   `ForbiddenException`, `ConflictException`, `BusinessRuleException` (422), `ServiceUnavailableException`;

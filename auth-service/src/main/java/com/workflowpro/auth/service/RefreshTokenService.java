@@ -84,6 +84,11 @@ public class RefreshTokenService {
                 .ifPresent(token -> token.revoke(clock.instant()));
     }
 
+    /** Signs the user out everywhere (password change, account disabled). */
+    public void revokeAllForUser(User user) {
+        refreshTokenRepository.revokeAllActiveForUser(user.getId(), clock.instant());
+    }
+
     static String hash(String rawToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

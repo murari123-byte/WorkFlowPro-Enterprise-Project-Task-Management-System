@@ -26,6 +26,13 @@ app:
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:7d}
 
+  # Optional first ADMIN, created on startup if missing (see AdminBootstrap)
+  bootstrap-admin:
+    email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    first-name: ${BOOTSTRAP_ADMIN_FIRST_NAME:System}
+    last-name: ${BOOTSTRAP_ADMIN_LAST_NAME:Admin}
+
 springdoc:
   # Set SWAGGER_ENABLED=false in production
   api-docs:

@@ -74,6 +74,24 @@ public class User {
         roles.add(role);
     }
 
+    public void replaceRoles(Set<Role> newRoles) {
+        roles.clear();
+        roles.addAll(newRoles);
+    }
+
+    public void updateName(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public void changePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public boolean hasRole(RoleName roleName) {
+        return roles.stream().anyMatch(role -> role.getName() == roleName);
+    }
+
     public UUID getId() {
         return id;
     }
