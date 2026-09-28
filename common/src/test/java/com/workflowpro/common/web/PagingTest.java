@@ -3,6 +3,7 @@ package com.workflowpro.common.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,12 @@ class PagingTest {
         Pageable pageable = Paging.pageable(2, 10, "dueDate,desc", ALLOWED, DEFAULT);
         assertThat(pageable.getSort()).isEqualTo(Sort.by(Sort.Direction.DESC, "dueDate"));
         assertThat(pageable.getPageNumber()).isEqualTo(2);
+    }
+
+    @Test
+    void mapsApiSortNameToEntityProperty() {
+        Pageable pageable = Paging.pageable(0, 20, "priority,desc", Map.of("priority", "priorityRank"), DEFAULT);
+        assertThat(pageable.getSort()).isEqualTo(Sort.by(Sort.Direction.DESC, "priorityRank"));
     }
 
     @Test

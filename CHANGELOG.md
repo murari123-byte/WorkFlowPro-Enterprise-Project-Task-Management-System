@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3 / Step 4: Task Service (2026-09-28)
+- Flyway `V2__create_tasks_and_history.sql`: `tasks` (status/priority checks, generated `priority_rank`,
+  `@Version`, indexes on (project_id, status), assignee_id, partial index on open tasks' due_date) and
+  `task_history` (identity PK, FK cascade, index on (task_id, created_at DESC)).
+- `/api/tasks`: create, search (project, text, status, priority, assignee, overdue, sort incl. priority rank,
+  paging), get, update, `PATCH /{id}/status`, `PUT /{id}/assignee`, delete, `/{id}/history`, `/stats`, `/count`.
+- Workflow TODO ⇄ IN_PROGRESS ⇄ IN_REVIEW → COMPLETED, cancel from open states, reopen/restore.
+- `TaskPermissions`: leads (ADMIN, project manager, TEAM_LEAD member) create/edit/assign/any move;
+  assignee may only move own task between TODO/IN_PROGRESS/IN_REVIEW; delete = manager or ADMIN;
+  tasks only change while the project is PLANNING or ACTIVE; non-members get 404.
+- Overdue = due date before today (UTC) and status still open; history written in the same transaction.
+- common `Paging`: API sort name → entity property mapping.
+- Tests: `TaskPermissionsTest`, `TaskControllerIntegrationTest`.
+
 ### Changed — shared user lookup (2026-09-28)
 - `UserClient`, `RemoteUser`, `UserSummary` moved from project-service to `common.client`
   (`UserDirectoryClient`), so task-service can reuse them. project-service creates the bean in `ClientConfig`.
