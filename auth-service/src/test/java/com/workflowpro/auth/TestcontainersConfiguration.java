@@ -10,7 +10,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * {@code @ServiceConnection} points the datasource at it, so tests never touch the dev database.
  */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
+
+    /** Test-only signing key. Real keys come from the JWT_SECRET environment variable. */
+    public static final String TEST_JWT_SECRET_PROPERTY = "app.jwt.secret=test-only-secret-not-used-anywhere-else-1234567890";
 
     @Bean
     @ServiceConnection

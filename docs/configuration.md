@@ -27,6 +27,13 @@ Secrets have **no** default and must be set in the environment (added in later s
 | `TASK_DB_PASSWORD` | task-service, init script | *none — required, secret* | Step 2 |
 | `NOTIFICATION_DB_NAME` / `NOTIFICATION_DB_USER` | notification-service, init script | `notification_db` / `notification_user` | Step 2 |
 | `NOTIFICATION_DB_PASSWORD` | notification-service, init script | *none — required, secret* | Step 2 |
+| `JWT_SECRET` | auth-service | *none — required, secret, min 32 chars* | Phase 2 / Step 1 |
+| `JWT_ISSUER` | auth-service | `workflowpro-auth` | Phase 2 / Step 1 |
+| `JWT_ACCESS_TOKEN_TTL` | auth-service | `15m` | Phase 2 / Step 1 |
+| `JWT_REFRESH_TOKEN_TTL` | auth-service | `7d` | Phase 2 / Step 1 |
+| `SWAGGER_ENABLED` | auth-service | `true` (set `false` in production) | Phase 2 / Step 1 |
+
+Durations use Spring Boot format: `15m`, `1h`, `7d`, `30s`.
 
 Docker Compose reads `.env` automatically. Spring Boot does not: run `set -a; source .env; set +a`
 in the terminal before starting a service.
@@ -49,6 +56,18 @@ spring:
     enabled: true
     locations: classpath:db/migration
 ```
+
+## JWT settings (auth-service)
+
+```yaml
+app:
+  jwt:
+    secret: ${JWT_SECRET}                          # no default, validated: min 32 characters
+    issuer: ${JWT_ISSUER:workflowpro-auth}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
+    refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:7d}
+```
+Bound to the `JwtProperties` record (`@Validated`). Generate a secret with `openssl rand -base64 48`.
 
 ## Actuator
 

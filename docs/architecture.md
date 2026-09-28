@@ -5,7 +5,7 @@
 | Service | Port | Base path | Owns data | Responsibility |
 |---|---|---|---|---|
 | api-gateway | 9080 | `/` | none | Single entry point for the React app; routes requests to services |
-| auth-service | 9081 | `/api/auth` | `auth_db` | Users, login, JWT issuing |
+| auth-service | 9081 | `/api/auth` | `auth_db` | Users, roles, login, JWT access + refresh tokens |
 | project-service | 9082 | `/api/projects` | `project_db` | Projects and project members |
 | task-service | 9083 | `/api/tasks` | `task_db` | Tasks inside projects |
 | notification-service | 9084 | `/api/notifications` | `notification_db` | User notifications |

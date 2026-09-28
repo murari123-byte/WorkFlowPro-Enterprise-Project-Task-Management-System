@@ -43,3 +43,18 @@ docker compose up -d        # init script runs again with the new values
 ## Port 5440 already in use
 Another Postgres is on 5440. Set `DB_PORT=5441` (any free port) in `.env`, then `docker compose up -d`.
 Note: a different PostgreSQL already runs on 5435 on the dev machine — WorkFlowPro never uses it.
+
+## auth-service fails: `Binding to target ...JwtProperties failed` / `Value: "${JWT_SECRET}"`
+**Cause:** `JWT_SECRET` is not set in this terminal. **Fix:** `set -a; source .env; set +a`.
+
+## auth-service fails: `JWT_SECRET must be at least 32 characters`
+**Cause:** the secret is too short for HS256 (the `.env.example` placeholder is deliberately too short).
+**Fix:** `openssl rand -base64 48`, put the result in `.env` as `JWT_SECRET`.
+
+## `401` on `/api/auth/me` with a token that worked earlier
+The access token expired (15 min by default) — call `/api/auth/refresh`. Also happens if `JWT_SECRET`
+or `JWT_ISSUER` changed since the token was issued.
+
+## `/api/auth/refresh` returns 401 for a token that was never used
+If an **older** refresh token of the same user was replayed, reuse detection revoked all that user's
+sessions. Log in again. The log shows `Revoked refresh token reused for user ...`.

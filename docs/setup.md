@@ -41,7 +41,7 @@ Stop it with `docker compose stop` (data kept). See troubleshooting for a full r
 ```bash
 mvn clean install
 ```
-Expected: `BUILD SUCCESS`, 13 tests, 0 failures.
+Expected: `BUILD SUCCESS`, 30 tests, 0 failures.
 Docker must be running: context tests start a temporary PostgreSQL container (Testcontainers).
 They do **not** use the dev database or your `.env`.
 The first build downloads dependencies and can take a few minutes.

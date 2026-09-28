@@ -2,7 +2,9 @@
 
 A Java 21 / Spring Boot microservices project with a React + TypeScript frontend.
 
-> **Status:** Phase 1 (Foundation) — Step 2 done: PostgreSQL (Docker) + one database per service + Flyway.
+> **Status:** Phase 2 (Authentication & Users) — Step 1 done: registration, login, JWT access + refresh tokens,
+> logout and current user in auth-service.
+> Phase 1 Steps 1–2 done (services, PostgreSQL, Flyway). Gateway routes and the React app are still to come.
 > No business features yet.
 
 ## Architecture (target for Phase 1)
@@ -26,10 +28,10 @@ Details: [docs/architecture.md](docs/architecture.md)
 | Gateway | Spring Cloud Gateway (Spring Cloud 2025.1.3) |
 | Build | Maven 3.9+ (multi-module) |
 | Database | PostgreSQL 16 (Docker) + Flyway 11 + Spring Data JPA / Hibernate 7 |
-| Security | Spring Security + JWT *(later phase)* |
+| Security | Spring Security 7 + JWT (HS256, OAuth2 Resource Server) + BCrypt |
 | Frontend | React + TypeScript + Axios + React Router, plain CSS *(Step 5)* |
 | Tests | JUnit 5, Mockito, AssertJ, Testcontainers |
-| API docs | Swagger / OpenAPI *(Step 4)* |
+| API docs | springdoc-openapi 3 (Swagger UI) |
 
 ## Repository layout
 
@@ -77,6 +79,19 @@ curl http://localhost:9081/actuator/health
 curl http://localhost:9081/api/auth/ping
 ```
 
+## Auth API (auth-service)
+
+| Method | Path | Access |
+|---|---|---|
+| POST | `/api/auth/register` | public |
+| POST | `/api/auth/login` | public |
+| POST | `/api/auth/refresh` | public |
+| POST | `/api/auth/logout` | public |
+| GET | `/api/auth/me` | Bearer token |
+
+Swagger UI: http://localhost:9081/swagger-ui.html — full reference in [docs/api.md](docs/api.md),
+security design in [docs/authentication.md](docs/authentication.md).
+
 ## Endpoints available now
 
 | Service | Port | Health | Ping |
@@ -90,6 +105,8 @@ curl http://localhost:9081/api/auth/ping
 ## Documentation
 
 - [docs/setup.md](docs/setup.md) — install and run, step by step
+- [docs/authentication.md](docs/authentication.md) — JWT, refresh tokens, roles, security rules
+- [docs/api.md](docs/api.md) — every endpoint with request/response examples
 - [docs/architecture.md](docs/architecture.md) — services, ports, communication rules
 - [docs/configuration.md](docs/configuration.md) — every environment variable
 - [docs/dependencies.md](docs/dependencies.md) — every dependency and why it is there

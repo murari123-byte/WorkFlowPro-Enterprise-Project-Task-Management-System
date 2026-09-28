@@ -33,6 +33,16 @@ Versions are managed by the parent POM (`spring-boot-starter-parent` 4.0.8 and t
 |---|---|---|
 | Docker image `postgres:16-alpine` | 16 | Dev database (docker-compose) and test database (Testcontainers) |
 
+## auth-service only (Phase 2)
+
+| Dependency | Scope | Why |
+|---|---|---|
+| `spring-boot-starter-security` | compile | Spring Security 7: filter chain, `BCryptPasswordEncoder`, `@PreAuthorize` |
+| `spring-boot-starter-security-oauth2-resource-server` | compile | Validates `Bearer` JWTs; brings Nimbus JOSE for signing (`JwtEncoder`) |
+| `springdoc-openapi-starter-webmvc-ui` | compile | Swagger UI + `/v3/api-docs`. Version `3.0.3` set in parent (`springdoc.version`) — the 3.0.x line targets Boot 4.0 |
+| `spring-boot-starter-webmvc-test` | test | `MockMvc` / `@AutoConfigureMockMvc` (moved to its own module in Boot 4) |
+| `spring-boot-starter-security-test` | test | Spring Security test support |
+
 ## api-gateway
 
 | Dependency | Scope | Why |

@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 2 / Step 1: JWT authentication, registration, login (2026-09-28)
+- auth-service endpoints: `POST /api/auth/register`, `/login`, `/refresh`, `/logout`, `GET /api/auth/me`.
+- Spring Security (stateless) + OAuth2 Resource Server: HS256 JWT access tokens (15 min) with
+  `sub`, `email`, `roles` claims; roles mapped to `ROLE_*` authorities; `@EnableMethodSecurity`.
+- Refresh tokens: random, SHA-256 hashed in DB, single-use rotation, reuse detection revokes all sessions.
+- BCrypt password hashing; case-insensitive unique emails; registration always assigns `EMPLOYEE`.
+- Global exception handler + JSON 401/403 handler with one `ErrorResponse` format.
+- Swagger UI (springdoc-openapi 3.0.3) at `/swagger-ui.html`, toggled by `SWAGGER_ENABLED`.
+- Flyway: `V2__create_users_and_roles.sql` (seeds 4 roles), `V3__create_refresh_tokens.sql`.
+- Env vars: `JWT_SECRET`, `JWT_ISSUER`, `JWT_ACCESS_TOKEN_TTL`, `JWT_REFRESH_TOKEN_TTL`, `SWAGGER_ENABLED`.
+- Tests: `AuthServiceTest`, `RefreshTokenServiceTest` (Mockito), `AuthControllerIntegrationTest`
+  (MockMvc + Testcontainers, full register → me → refresh → reuse → logout flow).
+- Docs: `docs/authentication.md`, `docs/api.md`.
+
 ### Added — Phase 1 / Step 2: PostgreSQL + Flyway (2026-09-28)
 - `docker-compose.yml`: PostgreSQL 16 (`postgres:16-alpine`) as container `workflowpro-postgres` on port 5440,
   data in the named volume `workflowpro-pgdata`.

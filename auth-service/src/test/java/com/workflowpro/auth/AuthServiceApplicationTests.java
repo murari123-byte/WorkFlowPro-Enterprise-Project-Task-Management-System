@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
-@SpringBootTest
+@SpringBootTest(properties = TestcontainersConfiguration.TEST_JWT_SECRET_PROPERTY)
 @Import(TestcontainersConfiguration.class)
 class AuthServiceApplicationTests {
 
@@ -23,7 +23,7 @@ class AuthServiceApplicationTests {
     @Test
     void flywayMigrationsAreApplied() {
         assertThat(flyway.info().current()).isNotNull();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("1");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("3");
         assertThat(flyway.info().pending()).isEmpty();
     }
 }
