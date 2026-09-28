@@ -2,11 +2,9 @@
 
 A Java 21 / Spring Boot microservices project with a React + TypeScript frontend.
 
-> **Status:** Phase 2 (Authentication & Users) — Step 1 done: registration, login, JWT access + refresh tokens,
-> logout and current user in auth-service.
-> Also done: Phase 1 Step 3 — API Gateway routes all `/api/**` traffic and handles CORS.
-> Build order: React app + login → project CRUD → task CRUD → Kanban board.
-> No business features yet.
+> **Status:** Backend complete and tested (gateway, auth, project, task services, 105 tests).
+> React frontend is in progress and does not build yet.
+> **See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for exactly what is done and what remains.**
 
 ## Architecture (target for Phase 1)
 
