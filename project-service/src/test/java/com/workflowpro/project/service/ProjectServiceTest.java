@@ -26,9 +26,9 @@ import com.workflowpro.common.exception.ConflictException;
 import com.workflowpro.common.exception.ForbiddenException;
 import com.workflowpro.common.exception.ResourceNotFoundException;
 import com.workflowpro.common.security.AuthenticatedUser;
-import com.workflowpro.project.client.RemoteUser;
+import com.workflowpro.common.client.RemoteUser;
 import com.workflowpro.project.client.TaskClient;
-import com.workflowpro.project.client.UserClient;
+import com.workflowpro.common.client.UserDirectoryClient;
 import com.workflowpro.project.dto.ProjectRequest;
 import com.workflowpro.project.entity.Project;
 import com.workflowpro.project.entity.ProjectStatus;
@@ -38,7 +38,7 @@ import com.workflowpro.project.repository.ProjectRepository;
 class ProjectServiceTest {
 
     @Mock private ProjectRepository projectRepository;
-    @Mock private UserClient userClient;
+    @Mock private UserDirectoryClient userDirectory;
     @Mock private TaskClient taskClient;
 
     private ProjectService service;
@@ -50,7 +50,7 @@ class ProjectServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProjectService(projectRepository, userClient, taskClient);
+        service = new ProjectService(projectRepository, userDirectory, taskClient);
     }
 
     private RemoteUser remote(UUID id, String... roles) {
@@ -64,8 +64,8 @@ class ProjectServiceTest {
     @Test
     void projectManagerCreatesProjectAndBecomesManagerAndMember() {
         when(projectRepository.existsByNameIgnoreCase("Website")).thenReturn(false);
-        when(userClient.findUser(pmId)).thenReturn(Optional.of(remote(pmId, "PROJECT_MANAGER")));
-        when(userClient.findUsers(any())).thenReturn(Map.of());
+        when(userDirectory.findUser(pmId)).thenReturn(Optional.of(remote(pmId, "PROJECT_MANAGER")));
+        when(userDirectory.findUsers(any())).thenReturn(Map.of());
 
         var response = service.create(pm, new ProjectRequest(" Website ", "", LocalDate.now(), null, null));
 
@@ -90,7 +90,7 @@ class ProjectServiceTest {
     void managerMustHaveManagerOrAdminRole() {
         UUID employeeId = UUID.randomUUID();
         when(projectRepository.existsByNameIgnoreCase(anyString())).thenReturn(false);
-        when(userClient.findUser(employeeId)).thenReturn(Optional.of(remote(employeeId, "EMPLOYEE")));
+        when(userDirectory.findUser(employeeId)).thenReturn(Optional.of(remote(employeeId, "EMPLOYEE")));
 
         assertThatThrownBy(() -> service.create(admin, new ProjectRequest("X", null, null, null, employeeId)))
                 .isInstanceOf(BusinessRuleException.class)

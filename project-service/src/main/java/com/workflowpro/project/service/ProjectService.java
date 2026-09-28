@@ -19,16 +19,16 @@ import com.workflowpro.common.exception.ConflictException;
 import com.workflowpro.common.exception.ForbiddenException;
 import com.workflowpro.common.exception.ResourceNotFoundException;
 import com.workflowpro.common.security.AuthenticatedUser;
-import com.workflowpro.project.client.RemoteUser;
+import com.workflowpro.common.client.RemoteUser;
 import com.workflowpro.project.client.TaskClient;
-import com.workflowpro.project.client.UserClient;
+import com.workflowpro.common.client.UserDirectoryClient;
 import com.workflowpro.project.dto.AccessibleProjectsResponse;
 import com.workflowpro.project.dto.ProjectMembershipResponse;
 import com.workflowpro.project.dto.ProjectRequest;
 import com.workflowpro.project.dto.ProjectResponse;
 import com.workflowpro.project.dto.ProjectStatsResponse;
 import com.workflowpro.project.dto.ProjectSummaryResponse;
-import com.workflowpro.project.dto.UserSummary;
+import com.workflowpro.common.client.UserSummary;
 import com.workflowpro.project.entity.Project;
 import com.workflowpro.project.entity.ProjectMember;
 import com.workflowpro.project.entity.ProjectStatus;
@@ -48,12 +48,12 @@ import com.workflowpro.project.repository.ProjectSpecifications;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final UserClient userClient;
+    private final UserDirectoryClient userDirectory;
     private final TaskClient taskClient;
 
-    public ProjectService(ProjectRepository projectRepository, UserClient userClient, TaskClient taskClient) {
+    public ProjectService(ProjectRepository projectRepository, UserDirectoryClient userDirectory, TaskClient taskClient) {
         this.projectRepository = projectRepository;
-        this.userClient = userClient;
+        this.userDirectory = userDirectory;
         this.taskClient = taskClient;
     }
 
@@ -88,11 +88,11 @@ public class ProjectService {
         // One call to auth-service for all managers on this page (not one call per row)
         Set<UUID> managerIds = new HashSet<>();
         page.forEach(project -> managerIds.add(project.getManagerId()));
-        Map<UUID, RemoteUser> managers = userClient.findUsers(managerIds);
+        Map<UUID, RemoteUser> managers = userDirectory.findUsers(managerIds);
 
         return page.map(project -> new ProjectSummaryResponse(project.getId(), project.getName(),
                 project.getStatus(), project.getStartDate(), project.getEndDate(),
-                summaryOf(project.getManagerId(), managers), project.getUpdatedAt()));
+                UserDirectoryClient.summaryOf(project.getManagerId(), managers), project.getUpdatedAt()));
     }
 
     @Transactional(readOnly = true)
@@ -143,7 +143,7 @@ public class ProjectService {
         if (project.isMember(userId)) {
             throw new ConflictException("User is already a member of this project");
         }
-        RemoteUser user = userClient.findUser(userId)
+        RemoteUser user = userDirectory.findUser(userId)
                 .filter(RemoteUser::enabled)
                 .orElseThrow(() -> new BusinessRuleException("User not found or account disabled"));
         project.addMember(user.id());
@@ -237,7 +237,7 @@ public class ProjectService {
 
     /** A manager must be an enabled user with the PROJECT_MANAGER or ADMIN role. */
     private void requireValidManager(UUID managerId) {
-        RemoteUser manager = userClient.findUser(managerId)
+        RemoteUser manager = userDirectory.findUser(managerId)
                 .filter(RemoteUser::enabled)
                 .orElseThrow(() -> new BusinessRuleException("Manager not found or account disabled"));
         if (!manager.hasAnyRole(AuthenticatedUser.PROJECT_MANAGER, AuthenticatedUser.ADMIN)) {
@@ -251,10 +251,10 @@ public class ProjectService {
         Set<UUID> userIds = new HashSet<>();
         project.getMembers().forEach(member -> userIds.add(member.getUserId()));
         userIds.add(project.getManagerId());
-        Map<UUID, RemoteUser> users = userClient.findUsers(userIds);
+        Map<UUID, RemoteUser> users = userDirectory.findUsers(userIds);
 
         List<UserSummary> members = project.getMembers().stream()
-                .map(member -> summaryOf(member.getUserId(), users))
+                .map(member -> UserDirectoryClient.summaryOf(member.getUserId(), users))
                 .sorted(Comparator.comparing(UserSummary::firstName, String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(UserSummary::lastName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
@@ -265,13 +265,8 @@ public class ProjectService {
 
         return new ProjectResponse(project.getId(), project.getName(), project.getDescription(),
                 project.getStatus(), allowedStatuses, project.getStartDate(), project.getEndDate(),
-                summaryOf(project.getManagerId(), users), members, canManage,
+                UserDirectoryClient.summaryOf(project.getManagerId(), users), members, canManage,
                 project.getCreatedAt(), project.getUpdatedAt());
-    }
-
-    private static UserSummary summaryOf(UUID userId, Map<UUID, RemoteUser> users) {
-        RemoteUser user = users.get(userId);
-        return user == null ? UserSummary.unknown(userId) : user.toSummary();
     }
 
     private static String trimToNull(String value) {

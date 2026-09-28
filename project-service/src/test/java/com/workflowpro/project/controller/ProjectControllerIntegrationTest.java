@@ -35,9 +35,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.jayway.jsonpath.JsonPath;
 import com.workflowpro.project.TestcontainersConfiguration;
-import com.workflowpro.project.client.RemoteUser;
+import com.workflowpro.common.client.RemoteUser;
 import com.workflowpro.project.client.TaskClient;
-import com.workflowpro.project.client.UserClient;
+import com.workflowpro.common.client.UserDirectoryClient;
 import com.workflowpro.project.support.TestJwts;
 
 /**
@@ -52,7 +52,7 @@ class ProjectControllerIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
 
-    @MockitoBean private UserClient userClient;
+    @MockitoBean private UserDirectoryClient userDirectory;
     @MockitoBean private TaskClient taskClient;
 
     /** Fake auth-service directory: user id -> user. */
@@ -69,8 +69,8 @@ class ProjectControllerIntegrationTest {
         otherPm = addUser("PROJECT_MANAGER");
         employee = addUser("EMPLOYEE");
         admin = addUser("ADMIN");
-        when(userClient.findUser(any())).thenAnswer(inv -> Optional.ofNullable(directory.get(inv.<UUID>getArgument(0))));
-        when(userClient.findUsers(anyCollection())).thenAnswer(inv -> inv.<Collection<UUID>>getArgument(0).stream()
+        when(userDirectory.findUser(any())).thenAnswer(inv -> Optional.ofNullable(directory.get(inv.<UUID>getArgument(0))));
+        when(userDirectory.findUsers(anyCollection())).thenAnswer(inv -> inv.<Collection<UUID>>getArgument(0).stream()
                 .filter(directory::containsKey)
                 .collect(Collectors.toMap(Function.identity(), directory::get)));
     }

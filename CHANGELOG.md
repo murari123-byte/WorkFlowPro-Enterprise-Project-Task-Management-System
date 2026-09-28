@@ -5,6 +5,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — shared user lookup (2026-09-28)
+- `UserClient`, `RemoteUser`, `UserSummary` moved from project-service to `common.client`
+  (`UserDirectoryClient`), so task-service can reuse them. project-service creates the bean in `ClientConfig`.
+
 ### Added — Phase 3 / Step 3: Project Service (2026-09-28)
 - Flyway `V2__create_projects.sql`: `projects` (status check, date check, `@Version` column,
   unique `LOWER(name)`), `project_members` (composite PK, FK with cascade, index on `user_id`).

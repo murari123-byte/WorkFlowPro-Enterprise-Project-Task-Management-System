@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import com.workflowpro.common.client.UserSummary;
 import com.workflowpro.project.entity.ProjectStatus;
 
 /**

@@ -1,4 +1,4 @@
-package com.workflowpro.project.client;
+package com.workflowpro.common.client;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,24 +9,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
-import com.workflowpro.common.client.ServiceClients;
-import com.workflowpro.project.config.ServiceUrlsProperties;
-
-/** Calls auth-service's /api/users endpoints with the caller's token. */
-@Component
-public class UserClient {
+/**
+ * Calls auth-service's /api/users endpoints with the caller's token.
+ * Each service creates one as a bean with its AUTH_SERVICE_URL.
+ */
+public class UserDirectoryClient {
 
     private static final String SERVICE_NAME = "auth-service";
     private static final int BATCH_SIZE = 100;
 
     private final RestClient restClient;
 
-    public UserClient(ServiceUrlsProperties urls) {
-        this.restClient = ServiceClients.create(urls.authUrl());
+    public UserDirectoryClient(String authServiceUrl) {
+        this.restClient = ServiceClients.create(authServiceUrl);
     }
 
     public Optional<RemoteUser> findUser(UUID id) {
@@ -54,5 +52,11 @@ public class UserClient {
             }
         }
         return result;
+    }
+
+    /** Summary for an id from a lookup map, or an "Unknown user" placeholder. */
+    public static UserSummary summaryOf(UUID userId, Map<UUID, RemoteUser> users) {
+        RemoteUser user = users.get(userId);
+        return user == null ? UserSummary.unknown(userId) : user.toSummary();
     }
 }

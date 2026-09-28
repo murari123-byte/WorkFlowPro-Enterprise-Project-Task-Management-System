@@ -1,12 +1,11 @@
-package com.workflowpro.project.client;
+package com.workflowpro.common.client;
 
 import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.workflowpro.project.dto.UserSummary;
 
-/** The part of auth-service's UserResponse that project-service needs. */
+/** The part of auth-service's UserResponse that other services need. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RemoteUser(UUID id, String email, String firstName, String lastName, List<String> roles,
                          boolean enabled) {
