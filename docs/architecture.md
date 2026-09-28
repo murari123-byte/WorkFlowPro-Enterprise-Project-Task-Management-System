@@ -45,6 +45,22 @@ com.workflowpro.<service>
 └── exception/      global exception handling   (Step 4)
 ```
 
+## Request flow through the gateway
+
+```
+Browser (http://localhost:5173)
+   │  GET http://localhost:9080/api/auth/me   Authorization: Bearer <jwt>
+   ▼
+API Gateway :9080  ── CORS check (CORS_ALLOWED_ORIGINS) ── route by path prefix
+   │  GET http://localhost:9081/api/auth/me   (path + Authorization header unchanged)
+   ▼
+auth-service :9081 ── verifies JWT itself ── returns JSON
+```
+
+- The gateway does **not** check JWTs today. Each service verifies the token itself, so a service is
+  never trusted just because a request came through the gateway.
+- Unknown path → `404` from the gateway. Service not running → `503` (`ServiceUnavailableHandler`).
+
 ## Why the gateway is different
 
 Spring Cloud Gateway runs on **WebFlux (Netty)**, not Spring MVC (Tomcat).

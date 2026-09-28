@@ -15,6 +15,11 @@ Secrets have **no** default and must be set in the environment (added in later s
 | `PROJECT_SERVICE_PORT` | project-service | `9082` | Step 1 |
 | `TASK_SERVICE_PORT` | task-service | `9083` | Step 1 |
 | `NOTIFICATION_SERVICE_PORT` | notification-service | `9084` | Step 1 |
+| `AUTH_SERVICE_URL` | api-gateway | `http://localhost:9081` | Phase 1 / Step 3 |
+| `PROJECT_SERVICE_URL` | api-gateway | `http://localhost:9082` | Phase 1 / Step 3 |
+| `TASK_SERVICE_URL` | api-gateway | `http://localhost:9083` | Phase 1 / Step 3 |
+| `NOTIFICATION_SERVICE_URL` | api-gateway | `http://localhost:9084` | Phase 1 / Step 3 |
+| `CORS_ALLOWED_ORIGINS` | api-gateway | `http://localhost:5173` (comma-separated list) | Phase 1 / Step 3 |
 | `DB_HOST` | all business services | `localhost` | Step 2 |
 | `DB_PORT` | all business services, docker-compose | `5440` | Step 2 |
 | `POSTGRES_ADMIN_USER` | docker-compose (superuser) | *none — required* | Step 2 |
@@ -68,6 +73,27 @@ app:
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:7d}
 ```
 Bound to the `JwtProperties` record (`@Validated`). Generate a secret with `openssl rand -base64 48`.
+
+## Gateway routes and CORS (api-gateway)
+
+Property prefix in Spring Cloud Gateway 5 (2025.1.x) is `spring.cloud.gateway.server.webflux.*`
+(the old `spring.cloud.gateway.routes` no longer works).
+
+```yaml
+spring.cloud.gateway.server.webflux:
+  routes:
+    - id: auth-service
+      uri: ${AUTH_SERVICE_URL:http://localhost:9081}
+      predicates: [ Path=/api/auth/** ]
+    # ... same for projects, tasks, notifications
+  globalcors:
+    cors-configurations:
+      '[/**]':
+        allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+        allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+        allowed-headers: Authorization,Content-Type
+        max-age: 3600
+```
 
 ## Actuator
 

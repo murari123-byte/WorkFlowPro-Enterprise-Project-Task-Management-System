@@ -41,7 +41,7 @@ Stop it with `docker compose stop` (data kept). See troubleshooting for a full r
 ```bash
 mvn clean install
 ```
-Expected: `BUILD SUCCESS`, 30 tests, 0 failures.
+Expected: `BUILD SUCCESS`, 40 tests, 0 failures.
 Docker must be running: context tests start a temporary PostgreSQL container (Testcontainers).
 They do **not** use the dev database or your `.env`.
 The first build downloads dependencies and can take a few minutes.
@@ -70,6 +70,10 @@ curl localhost:9081/api/auth/ping
 curl localhost:9082/api/projects/ping
 curl localhost:9083/api/tasks/ping
 curl localhost:9084/api/notifications/ping
+
+# through the gateway (what the React app uses)
+curl localhost:9080/api/auth/ping
+curl localhost:9080/api/tasks/ping
 ```
 Each health check should print `"status":"UP"`, and business services show a `db` component with `"status":"UP"`.
 

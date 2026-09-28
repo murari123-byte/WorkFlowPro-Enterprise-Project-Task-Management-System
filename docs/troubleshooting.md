@@ -58,3 +58,21 @@ or `JWT_ISSUER` changed since the token was issued.
 ## `/api/auth/refresh` returns 401 for a token that was never used
 If an **older** refresh token of the same user was replayed, reuse detection revoked all that user's
 sessions. Log in again. The log shows `Revoked refresh token reused for user ...`.
+
+## Gateway returns `503 Service Unavailable`
+**Cause:** the target service is not running, or its `*_SERVICE_URL` points to the wrong place.
+**Fix:** start the service, check `curl localhost:<port>/actuator/health`, check the URL env vars.
+The gateway log shows `Backend service unreachable for /api/...`.
+
+## Gateway returns `404` for an `/api/...` path
+The path does not start with a routed prefix (`/api/auth`, `/api/projects`, `/api/tasks`,
+`/api/notifications`). Check for typos such as `/api/project/` (singular).
+
+## Browser: "blocked by CORS policy" / preflight returns 403
+**Cause:** the page's origin is not in `CORS_ALLOWED_ORIGINS`.
+**Fix:** add it (exact scheme + host + port, e.g. `http://localhost:5173`), restart the gateway.
+Call the gateway (`:9080`) from the browser, never a service port — services have no CORS config.
+
+## Gateway routes ignored after upgrading Spring Cloud
+Spring Cloud Gateway 5 reads `spring.cloud.gateway.server.webflux.routes`. The old
+`spring.cloud.gateway.routes` key is silently ignored, so every path returns 404.

@@ -5,6 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 1 / Step 3: API Gateway routing + CORS (2026-09-28)
+- Routes `/api/auth/**`, `/api/projects/**`, `/api/tasks/**`, `/api/notifications/**` to the four
+  services; target URLs from `AUTH_SERVICE_URL`, `PROJECT_SERVICE_URL`, `TASK_SERVICE_URL`,
+  `NOTIFICATION_SERVICE_URL`. Paths forwarded unchanged; `Authorization` header passed through.
+- Global CORS at the gateway only, origins from `CORS_ALLOWED_ORIGINS` (default `http://localhost:5173`);
+  `DedupeResponseHeader` default filter.
+- `ServiceUnavailableHandler`: unreachable service → `503` JSON error instead of a generic `500`.
+- Tests: `GatewayRoutingTest` (fake backend via JDK `HttpServer`: routing, headers, 404, CORS allow/deny),
+  `GatewayServiceDownTest` (503). No new dependencies.
+
 ### Added — Phase 2 / Step 1: JWT authentication, registration, login (2026-09-28)
 - auth-service endpoints: `POST /api/auth/register`, `/login`, `/refresh`, `/logout`, `GET /api/auth/me`.
 - Spring Security (stateless) + OAuth2 Resource Server: HS256 JWT access tokens (15 min) with

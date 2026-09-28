@@ -4,7 +4,8 @@ A Java 21 / Spring Boot microservices project with a React + TypeScript frontend
 
 > **Status:** Phase 2 (Authentication & Users) — Step 1 done: registration, login, JWT access + refresh tokens,
 > logout and current user in auth-service.
-> Phase 1 Steps 1–2 done (services, PostgreSQL, Flyway). Gateway routes and the React app are still to come.
+> Also done: Phase 1 Step 3 — API Gateway routes all `/api/**` traffic and handles CORS.
+> Build order: React app + login → project CRUD → task CRUD → Kanban board.
 > No business features yet.
 
 ## Architecture (target for Phase 1)
@@ -77,7 +78,22 @@ mvn -pl notification-service spring-boot:run
 # 5. Check health ("db" component should be UP)
 curl http://localhost:9081/actuator/health
 curl http://localhost:9081/api/auth/ping
+
+# 6. Same call through the gateway (this is how the React app calls every service)
+curl http://localhost:9080/api/auth/ping
 ```
+
+## API Gateway routes (port 9080)
+
+| Path | Forwarded to |
+|---|---|
+| `/api/auth/**` | auth-service (`AUTH_SERVICE_URL`) |
+| `/api/projects/**` | project-service (`PROJECT_SERVICE_URL`) |
+| `/api/tasks/**` | task-service (`TASK_SERVICE_URL`) |
+| `/api/notifications/**` | notification-service (`NOTIFICATION_SERVICE_URL`) |
+
+Paths are forwarded unchanged. CORS is handled only by the gateway (`CORS_ALLOWED_ORIGINS`).
+A stopped service returns `503 Service Unavailable`.
 
 ## Auth API (auth-service)
 

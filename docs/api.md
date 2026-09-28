@@ -1,5 +1,8 @@
 # API Reference
 
+**Base URL for clients (React, curl, Postman): `http://localhost:9080`** — the API Gateway.
+Direct service ports (9081–9084) are for debugging only.
+
 Interactive docs (Swagger UI) per service while it runs:
 
 | Service | Swagger UI | OpenAPI JSON |
