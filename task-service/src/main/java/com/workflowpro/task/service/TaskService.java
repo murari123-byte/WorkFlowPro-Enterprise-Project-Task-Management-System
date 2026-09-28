@@ -105,7 +105,7 @@ public class TaskService {
     @Transactional(readOnly = true)
     public Page<TaskSummaryResponse> search(AuthenticatedUser caller, UUID projectId, String search,
                                             TaskStatus status, TaskPriority priority, UUID assigneeId,
-                                            boolean overdueOnly, Pageable pageable) {
+                                            boolean openOnly, boolean overdueOnly, Pageable pageable) {
         Specification<Task> scope;
         if (projectId != null) {
             projectClient.getMembership(projectId); // 404 if the caller cannot see it
@@ -125,6 +125,7 @@ public class TaskService {
                 TaskSpecifications.hasStatus(status),
                 TaskSpecifications.hasPriority(priority),
                 TaskSpecifications.assignedTo(assigneeId),
+                openOnly ? TaskSpecifications.open() : Specification.unrestricted(),
                 overdueOnly ? TaskSpecifications.overdue(today()) : Specification.unrestricted());
         Page<Task> page = taskRepository.findAll(spec, pageable);
 

@@ -94,10 +94,13 @@ class AuthServiceTest {
     @Test
     void loginWithUnknownEmailFailsWithSameError() {
         when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@example.com", "whatever")))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid email or password");
+        // the password is still checked (against a dummy hash) so both cases take the same time
+        verify(passwordEncoder).matches(any(), any());
     }
 
     @Test

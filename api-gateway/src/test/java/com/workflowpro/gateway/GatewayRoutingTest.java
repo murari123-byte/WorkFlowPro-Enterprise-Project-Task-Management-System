@@ -42,7 +42,6 @@ class GatewayRoutingTest {
         registry.add("AUTH_SERVICE_URL", () -> url);
         registry.add("PROJECT_SERVICE_URL", () -> url);
         registry.add("TASK_SERVICE_URL", () -> url);
-        registry.add("NOTIFICATION_SERVICE_URL", () -> url);
         registry.add("CORS_ALLOWED_ORIGINS", () -> ALLOWED_ORIGIN);
     }
 
@@ -57,7 +56,7 @@ class GatewayRoutingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/auth/ping", "/api/users/me", "/api/projects/ping", "/api/tasks/ping", "/api/notifications/ping"})
+    @ValueSource(strings = {"/api/auth/ping", "/api/users/me", "/api/projects/ping", "/api/tasks/ping"})
     void forwardsEachServicePathUnchanged(String path) {
         client.get().uri(path).exchange()
                 .expectStatus().isOk()

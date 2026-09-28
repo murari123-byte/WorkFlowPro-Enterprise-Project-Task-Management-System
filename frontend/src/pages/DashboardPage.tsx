@@ -42,7 +42,7 @@ export function DashboardPage() {
   // The three requests are independent, so they run in parallel
   const stats = useApi(() => Promise.all([projectsApi.stats(), tasksApi.stats()]), []);
   const myTasks = useApi(
-    () => tasksApi.search({ assigneeId: user?.id, sort: 'dueDate,asc', size: 5, status: '' }),
+    () => tasksApi.search({ assigneeId: user?.id, open: true, sort: 'dueDate,asc', size: 5 }),
     [user?.id],
   );
 
@@ -50,7 +50,7 @@ export function DashboardPage() {
   if (stats.error || !stats.data) return <ErrorMessage message={stats.error ?? 'No data'} onRetry={stats.reload} />;
 
   const [projects, tasks] = stats.data;
-  const openMyTasks = (myTasks.data?.content ?? []).filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED');
+  const openMyTasks = myTasks.data?.content ?? [];
 
   return (
     <>
@@ -81,7 +81,7 @@ export function DashboardPage() {
       <section className="card">
         <div className="card-header">
           <h2 className="card-title">My tasks</h2>
-          <Link to="/tasks?mine=1">View all</Link>
+          <Link to="/tasks?mine=1">View all my tasks</Link>
         </div>
         {myTasks.loading ? (
           <Loading />

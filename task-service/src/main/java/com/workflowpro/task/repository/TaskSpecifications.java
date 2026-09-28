@@ -53,6 +53,11 @@ public final class TaskSpecifications {
         return (root, query, cb) -> cb.isNull(root.get("assigneeId"));
     }
 
+    /** Not completed and not cancelled. */
+    public static Specification<Task> open() {
+        return (root, query, cb) -> root.get("status").in(TaskStatus.openStatuses());
+    }
+
     /** Due date in the past and still open. */
     public static Specification<Task> overdue(LocalDate today) {
         return (root, query, cb) -> cb.and(

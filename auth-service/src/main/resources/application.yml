@@ -10,6 +10,9 @@ spring:
 
   jpa:
     open-in-view: false
+    properties:
+      # Load lazy collections (e.g. user roles, project members) for up to 50 rows in ONE query (avoids N+1)
+      hibernate.default_batch_fetch_size: 50
     hibernate:
       # Flyway owns the schema. Hibernate only checks that entities match the tables.
       ddl-auto: validate
@@ -51,4 +54,5 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      # Only "UP"/"DOWN" is public. Component details (database, disk) are not shown to anonymous callers.
+      show-details: when-authorized

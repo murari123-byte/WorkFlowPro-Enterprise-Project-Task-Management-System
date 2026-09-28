@@ -19,4 +19,3 @@ SQL
 create_service_db "$AUTH_DB_NAME"         "$AUTH_DB_USER"         "$AUTH_DB_PASSWORD"
 create_service_db "$PROJECT_DB_NAME"      "$PROJECT_DB_USER"      "$PROJECT_DB_PASSWORD"
 create_service_db "$TASK_DB_NAME"         "$TASK_DB_USER"         "$TASK_DB_PASSWORD"
-create_service_db "$NOTIFICATION_DB_NAME" "$NOTIFICATION_DB_USER" "$NOTIFICATION_DB_PASSWORD"

@@ -70,19 +70,20 @@ public class TaskController {
     }
 
     @GetMapping
-    @Operation(summary = "Search tasks I can see: text, status, priority, assignee, overdue, sorting, paging")
+    @Operation(summary = "Search tasks I can see: text, status, priority, assignee, open, overdue, sorting, paging")
     public PageResponse<TaskSummaryResponse> search(@AuthenticationPrincipal Jwt jwt,
                                                     @RequestParam(required = false) UUID projectId,
                                                     @RequestParam(required = false) String search,
                                                     @RequestParam(required = false) TaskStatus status,
                                                     @RequestParam(required = false) TaskPriority priority,
                                                     @RequestParam(required = false) UUID assigneeId,
+                                                    @RequestParam(defaultValue = "false") boolean open,
                                                     @RequestParam(defaultValue = "false") boolean overdue,
                                                     @RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(required = false) String sort) {
         return PageResponse.from(taskService.search(AuthenticatedUser.from(jwt), projectId, search, status, priority,
-                assigneeId, overdue, Paging.pageable(page, size, sort, SORT_FIELDS, DEFAULT_SORT)), task -> task);
+                assigneeId, open, overdue, Paging.pageable(page, size, sort, SORT_FIELDS, DEFAULT_SORT)), task -> task);
     }
 
     @GetMapping("/stats")

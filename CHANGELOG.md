@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Code review fixes (2026-09-28)
+- Security: login now checks the password against a dummy BCrypt hash when the email is unknown, so
+  response time no longer reveals which emails have accounts.
+- Security: `/actuator/health` shows component details (database, disk) only to authorized callers
+  (`show-details: when-authorized`); anonymous callers see only `UP`/`DOWN`.
+- Bug: a 401/403 from another service used to become a 500; `ServiceClients.call` now returns 401/403
+  (`UnauthorizedException` added to common). Test: `ServiceClientsTest`.
+- Performance: `hibernate.default_batch_fetch_size: 50` in auth, project and task services — user roles
+  for a page of users load in one query instead of one per user (N+1).
+- API: `GET /api/tasks?open=true` (only TODO / IN_PROGRESS / IN_REVIEW); the dashboard "My tasks" uses it.
+- Frontend: editing an overdue task no longer fails validation for its unchanged past due date.
+
+### Removed
+- `GET /api/auth/me` — duplicate of `GET /api/users/me` (the frontend already used `/api/users/me`).
+- `notification-service` module (it only had a ping endpoint; the final architecture has no
+  notifications), its gateway route `/api/notifications/**`, and `NOTIFICATION_*` variables in
+  `.env.example`, `docker-compose.yml` and the database init script. A database volume created earlier
+  still contains an unused `notification_db`; `docker compose down -v` removes it.
+
 ### Added — Phase 3 / Step 5: React frontend (2026-09-28)
 - `frontend/` created with the Vite `react-ts` template; added `axios` and `react-router-dom`.
 - API layer (`src/api`): Axios client with Bearer token and single-flight refresh on 401, token storage

@@ -1,7 +1,7 @@
 package com.workflowpro.auth.service;
 
 import java.util.Locale;
-import java.util.UUID;
+import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +19,6 @@ import com.workflowpro.auth.exception.AccountDisabledException;
 import com.workflowpro.auth.exception.EmailAlreadyExistsException;
 import com.workflowpro.auth.exception.InvalidCredentialsException;
 import com.workflowpro.auth.exception.InvalidTokenException;
-import com.workflowpro.common.exception.ResourceNotFoundException;
 import com.workflowpro.auth.repository.RoleRepository;
 import com.workflowpro.auth.repository.UserRepository;
 
@@ -27,6 +26,12 @@ import com.workflowpro.auth.repository.UserRepository;
 public class AuthService {
 
     private static final String TOKEN_TYPE = "Bearer";
+
+    /**
+     * BCrypt hash of a random value. When the email is unknown we still check the password
+     * against this, so "unknown email" takes as long as "wrong password" (no timing hint).
+     */
+    private static final String DUMMY_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5BWXq4vXm3n6jJfZUl/7.hbxrCcHa";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -70,10 +75,12 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Same error for "unknown email" and "wrong password", so attackers can't discover accounts
-        User user = userRepository.findByEmail(normalizeEmail(request.email()))
-                .filter(found -> passwordEncoder.matches(request.password(), found.getPasswordHash()))
-                .orElseThrow(InvalidCredentialsException::new);
+        // Same error AND the same work for "unknown email" and "wrong password",
+        // so attackers can't discover which emails have accounts
+        Optional<User> found = userRepository.findByEmail(normalizeEmail(request.email()));
+        String hash = found.map(User::getPasswordHash).orElse(DUMMY_HASH);
+        boolean passwordMatches = passwordEncoder.matches(request.password(), hash);
+        User user = found.filter(u -> passwordMatches).orElseThrow(InvalidCredentialsException::new);
 
         if (!user.isEnabled()) {
             throw new AccountDisabledException();
@@ -95,13 +102,6 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
-    }
-
-    @Transactional(readOnly = true)
-    public UserResponse getCurrentUser(UUID userId) {
-        return userRepository.findById(userId)
-                .map(UserResponse::from)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private AuthResponse issueTokens(User user) {

@@ -4,11 +4,14 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import com.workflowpro.common.exception.ForbiddenException;
 import com.workflowpro.common.exception.ServiceUnavailableException;
+import com.workflowpro.common.exception.UnauthorizedException;
 
 /**
  * Creates the RestClient used for service-to-service calls and maps network problems to 503.
@@ -36,14 +39,19 @@ public final class ServiceClients {
     }
 
     /**
-     * Runs a call and turns "service down / timed out / 5xx" into a 503 for our own client.
-     * 4xx errors (404, 403, ...) are left for the caller to handle.
+     * Runs a call and maps the other service's problems to a clear status for OUR client:
+     * service down / timed out / 5xx -> 503, token rejected -> 401, not allowed -> 403.
+     * Other 4xx errors (e.g. 404) are left for the caller to handle.
      */
     public static <T> T call(String serviceName, Supplier<T> call) {
         try {
             return call.get();
         } catch (ResourceAccessException | HttpServerErrorException e) {
             throw new ServiceUnavailableException(serviceName + " is not available. Please try again later");
+        } catch (HttpClientErrorException.Unauthorized e) {
+            throw new UnauthorizedException("Your session has expired. Please sign in again");
+        } catch (HttpClientErrorException.Forbidden e) {
+            throw new ForbiddenException("You do not have permission to perform this action");
         }
     }
 }

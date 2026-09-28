@@ -52,7 +52,7 @@ class AuthControllerIntegrationTest {
         String accessToken = JsonPath.read(registerBody, "$.accessToken");
 
         // /me with the access token
-        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + accessToken))
+        mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email));
 
@@ -132,7 +132,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void meWithoutTokenReturns401() throws Exception {
-        mockMvc.perform(get("/api/auth/me"))
+        mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401));
     }
@@ -143,7 +143,7 @@ class AuthControllerIntegrationTest {
         String token = JsonPath.read(body, "$.accessToken");
         String tampered = token.substring(0, token.length() - 4) + "abcd";
 
-        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + tampered))
+        mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + tampered))
                 .andExpect(status().isUnauthorized());
     }
 

@@ -68,6 +68,8 @@ export interface TaskFilters {
   status?: TaskStatus | '';
   priority?: TaskPriority | '';
   assigneeId?: string;
+  /** only TODO / IN_PROGRESS / IN_REVIEW */
+  open?: boolean;
   overdue?: boolean;
   page?: number;
   size?: number;
@@ -83,7 +85,7 @@ export interface TaskInput {
 
 export const tasksApi = {
   search: (filters: TaskFilters) =>
-    api.get<Page<TaskSummary>>('/api/tasks', { params: clean({ ...filters, overdue: filters.overdue || undefined }) })
+    api.get<Page<TaskSummary>>('/api/tasks', { params: clean({ ...filters, open: filters.open || undefined, overdue: filters.overdue || undefined }) })
       .then((r) => r.data),
   get: (id: string) => api.get<Task>(`/api/tasks/${id}`).then((r) => r.data),
   create: (data: TaskInput & { projectId: string; assigneeId: string | null }) =>

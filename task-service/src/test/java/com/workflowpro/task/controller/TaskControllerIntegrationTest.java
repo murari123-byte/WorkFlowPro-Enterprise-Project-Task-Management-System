@@ -184,6 +184,12 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[*].priority").value(contains("URGENT", "HIGH")));
         mockMvc.perform(get("/api/tasks?search=" + tag + "&priority=LOW").header("Authorization", employee))
                 .andExpect(jsonPath("$.content", hasSize(1)));
+        // open=true hides completed/cancelled tasks
+        String doneId = createTask(tag + " done", "LOW", null);
+        mockMvc.perform(patch("/api/tasks/" + doneId + "/status").header("Authorization", manager)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CANCELLED\"}")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/tasks?search=" + tag + "&open=true").header("Authorization", employee))
+                .andExpect(jsonPath("$.totalElements").value(3));
         mockMvc.perform(get("/api/tasks?sort=assigneeId").header("Authorization", employee))
                 .andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/tasks?status=NOPE").header("Authorization", employee))

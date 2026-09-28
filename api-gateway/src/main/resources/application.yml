@@ -20,10 +20,6 @@ spring:
               uri: ${TASK_SERVICE_URL:http://localhost:9083}
               predicates:
                 - Path=/api/tasks/**
-            - id: notification-service
-              uri: ${NOTIFICATION_SERVICE_URL:http://localhost:9084}
-              predicates:
-                - Path=/api/notifications/**
 
           # If a service ever adds its own CORS headers, keep only one copy
           default-filters:
@@ -49,4 +45,5 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      # Only "UP"/"DOWN" is public. Component details (database, disk) are not shown to anonymous callers.
+      show-details: when-authorized

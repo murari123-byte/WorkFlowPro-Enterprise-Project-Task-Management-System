@@ -18,6 +18,8 @@ export function TaskFormPage() {
   const [projectName, setProjectName] = useState('');
   const [members, setMembers] = useState<UserSummary[]>([]);
   const [form, setForm] = useState({ title: '', description: '', priority: 'MEDIUM' as TaskPriority, dueDate: '', assigneeId: '' });
+  /** Due date when the page was opened. An overdue task keeps its past date unless the user changes it. */
+  const [originalDueDate, setOriginalDueDate] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,7 @@ export function TaskFormPage() {
           setProjectId(task.projectId);
           setProjectName(task.projectName);
           setForm({ title: task.title, description: task.description ?? '', priority: task.priority, dueDate: task.dueDate ?? '', assigneeId: '' });
+          setOriginalDueDate(task.dueDate ?? '');
         } else if (projectId) {
           const project = await projectsApi.get(projectId);
           if (!current) return;
@@ -66,7 +69,10 @@ export function TaskFormPage() {
     if (!form.title.trim()) found.title = 'Title is required';
     if (form.title.length > 200) found.title = 'Title can be at most 200 characters';
     if (form.description.length > 5000) found.description = 'Description can be at most 5000 characters';
-    if (form.dueDate && form.dueDate < todayIso()) found.dueDate = 'Due date cannot be in the past';
+    // Same rule as the backend: a NEW or CHANGED due date cannot be in the past
+    if (form.dueDate && form.dueDate !== originalDueDate && form.dueDate < todayIso()) {
+      found.dueDate = 'Due date cannot be in the past';
+    }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
@@ -111,7 +117,8 @@ export function TaskFormPage() {
             </select>
           </Field>
           <Field label="Due date" error={errors.dueDate}>
-            <input type="date" value={form.dueDate} onChange={update('dueDate')} min={todayIso()} />
+            <input type="date" value={form.dueDate} onChange={update('dueDate')}
+                   min={originalDueDate && originalDueDate < todayIso() ? originalDueDate : todayIso()} />
           </Field>
         </div>
         {!isEdit && (
