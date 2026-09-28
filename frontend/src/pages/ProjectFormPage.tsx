@@ -16,12 +16,17 @@ export function ProjectFormPage() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
+  // `current` ignores a late answer so it cannot overwrite what the user already typed
   useEffect(() => {
     if (!id) return;
+    let current = true;
     projectsApi.get(id)
-      .then((p) => setForm({ name: p.name, description: p.description ?? '', startDate: p.startDate ?? '', endDate: p.endDate ?? '' }))
-      .catch((e) => setServerError(errorMessage(e)))
-      .finally(() => setLoading(false));
+      .then((p) => current && setForm({ name: p.name, description: p.description ?? '', startDate: p.startDate ?? '', endDate: p.endDate ?? '' }))
+      .catch((e) => current && setServerError(errorMessage(e)))
+      .finally(() => current && setLoading(false));
+    return () => {
+      current = false;
+    };
   }, [id]);
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>

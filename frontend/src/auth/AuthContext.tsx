@@ -23,7 +23,8 @@ const AuthContext = createContext<AuthState | null>(null);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  // Only need to check a session on load if a refresh token was saved
+  const [initializing, setInitializing] = useState(() => tokenStorage.getRefreshToken() !== null);
 
   const applySession = useCallback((session: AuthResponse) => {
     tokenStorage.setAccessToken(session.accessToken);
@@ -35,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSessionExpiredHandler(() => setUserState(null));
     if (!tokenStorage.getRefreshToken()) {
-      setInitializing(false);
       return;
     }
     refreshSession()

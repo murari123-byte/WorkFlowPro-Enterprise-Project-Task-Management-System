@@ -16,7 +16,7 @@ partly built, and what is still to do. Read this first.
 | `common` shared library | ✅ Done and tested |
 | PostgreSQL + Flyway | ✅ Done (one database per service) |
 | Backend tests | ✅ 105 tests, all passing (`mvn clean install`) |
-| React frontend | 🟡 **In progress — does not build yet** |
+| React frontend | ✅ Done — builds, lint clean, 21-step browser test passed |
 | Documentation audit, interview prep, resume section | ❌ Not started |
 | notification-service | ⚪ Empty scaffold (ping only). The final architecture does not use it — decide whether to delete it |
 
@@ -92,31 +92,28 @@ partly built, and what is still to do. Read this first.
 Unit tests use JUnit 5 + Mockito. Integration tests use MockMvc with a real PostgreSQL started by
 Testcontainers, and real signed JWTs.
 
-## Frontend — what exists so far (`frontend/`)
+## Frontend (`frontend/`) — done
 
-Vite + React 19 + TypeScript + Axios + React Router 7, plain CSS.
+Vite + React 19 + TypeScript + Axios + React Router 7, plain CSS. Full description: [frontend.md](frontend.md).
 
-Written:
-- `src/types.ts` — types for every API response.
-- `src/api/` — Axios client (adds the token, refreshes it once on 401), token storage, error helpers,
-  one function per backend endpoint.
-- `src/auth/` — `AuthContext` (login, register, logout, restore session on reload), `RequireAuth`
-  (protected routes, role-based routes).
-- `src/hooks/` — `useApi` (loading/error/reload), `useDebounce`.
-- `src/components/` — Layout (responsive nav), loading/error/empty states, badges, pagination,
-  form field, user picker, task table (search, filters, sort, paging).
-- `src/pages/` — Login, Register, Dashboard, Projects list, Project form, Project details.
+- Pages: login, register, dashboard (8 stat cards, 3 bar charts, my tasks), projects list, project
+  details (status, members, manager, tasks), project form, tasks list, task details (status, assign,
+  activity timeline), task form, profile (name, password), admin users (roles, enable/disable), not found.
+- Axios client adds the token and refreshes it once on 401; the session survives a page reload.
+- Protected and role-based routes; buttons follow the permissions the API returns.
+- Search, filters, sorting and pagination on projects, tasks and users; debounced search boxes.
+- Loading, error (with retry), empty states; form validation matching the backend rules.
+- Responsive: collapsible menu, tables become cards on phones.
+- Verified: `npm run build` and `npm run lint` pass; a Playwright browser run of 21 steps against the real
+  backend passed with no console errors. Two bugs found by it were fixed (see frontend.md).
 
 ## What remains to finish the project
 
-1. **Frontend pages still to write:** Tasks page, Task details (status buttons, assign, history
-   timeline), Task form (create/edit), Profile (name + password), Admin users page, Not found page.
-2. **Frontend wiring:** replace the Vite template `src/App.tsx` / `src/main.tsx` with the router,
-   write `src/index.css` (the styles), then `npm run build` must pass.
-3. **End-to-end check:** run all services + frontend together and click through every flow
-   (register, login, create project, add member, create/assign/move task, dashboard).
+1. ~~Frontend pages~~ — done.
+2. ~~Frontend wiring and styles~~ — done.
+3. ~~End-to-end check~~ — done (21-step browser run, see frontend.md).
 4. **Final code review:** bugs, security, validation, duplicate code, indexes, API consistency.
-5. **Documentation audit:** create `docs/microservices.md`, `docs/database.md`, `docs/frontend.md`,
+5. **Documentation audit:** create `docs/microservices.md`, `docs/database.md`,
    `docs/testing.md`, `docs/interview-preparation.md` (with 30–40 Q&A and a resume section);
    rename `docs/database-migrations.md` to `docs/migrations.md`; bring README, `docs/api.md`,
    `docs/authentication.md` and `docs/architecture.md` up to date with the project, task and users APIs.
@@ -124,7 +121,7 @@ Written:
 7. **Not built (requested earlier, later marked out of scope):** Kanban board, task comments,
    organizations/teams.
 
-## How to run what exists now (backend)
+## How to run it
 
 ```bash
 git clone https://github.com/murari123-byte/WorkFlowPro-Enterprise-Project-Task-Management-System.git WorkFlowPro
@@ -142,4 +139,6 @@ java -jar task-service/target/task-service-0.1.0-SNAPSHOT.jar
 ```
 
 Swagger UI: `http://localhost:9081/swagger-ui.html`, `:9082/swagger-ui.html`, `:9083/swagger-ui.html`.
-Log in as the bootstrap admin from your `.env` to try the APIs.
+
+Frontend (new terminal): `cd frontend && npm install && npm run dev` → http://localhost:5173.
+Sign in as the bootstrap admin from your `.env`. Full guide: [setup.md](setup.md).

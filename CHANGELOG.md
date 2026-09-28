@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3 / Step 5: React frontend (2026-09-28)
+- `frontend/` created with the Vite `react-ts` template; added `axios` and `react-router-dom`.
+- API layer (`src/api`): Axios client with Bearer token and single-flight refresh on 401, token storage
+  (access token in memory, refresh token in localStorage), error helpers, one function per endpoint.
+- `AuthContext` (login, register, logout, session restore on reload) and `RequireAuth` (protected and
+  role-based routes).
+- Pages: login, register, dashboard, projects, project details/form, tasks, task details (activity
+  timeline)/form, profile, admin users, not found. Plain CSS, responsive (menu toggle, tables as cards).
+- `frontend/.env.example` (`VITE_API_BASE_URL`), `docs/frontend.md`; setup guide now includes the frontend.
+
+### Fixed (found by the end-to-end browser run)
+- Form hint/error text was inside `<label>`, polluting the field's accessible name; moved outside.
+- Task and project edit forms could be overwritten by a late duplicate load (StrictMode / slow network);
+  late responses are now ignored.
+- Lint: removed synchronous `setState` calls inside effects (AuthContext, task history).
+
+### Removed
+- Vite template files: `App.css`, `src/assets/*`, `public/icons.svg`, template `README.md`.
+
 ### Docs (2026-09-28)
 - `docs/setup.md` rewritten as a tested fresh-machine guide (secrets, bootstrap admin, first API calls,
   Swagger for all services, migration check). README quick start updated. `docs/PROJECT_STATUS.md` added.

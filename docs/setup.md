@@ -3,8 +3,7 @@
 Follow these steps in order on a fresh machine. Every command is run from the project root
 (`WorkFlowPro/`) unless it says otherwise.
 
-> Current state: the backend (gateway + auth + project + task services) works end to end.
-> The React frontend is not finished yet — see [PROJECT_STATUS.md](PROJECT_STATUS.md).
+> Current state: backend and React frontend both work end to end — see [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ## 1. Install the tools
 
@@ -187,21 +186,37 @@ user's next access token (after refresh or a new login).
 
 Turn Swagger off with `SWAGGER_ENABLED=false` in `.env`.
 
-## 10. Frontend (not finished yet)
+## 10. Start the frontend
 
-The React app in `frontend/` is still being built and **does not build yet**. When it is done:
+In a new terminal (the gateway from step 6 must be running):
 ```bash
-cd frontend
-npm install
-cp .env.example .env.local     # optional: VITE_API_BASE_URL, default http://localhost:9080
+cd WorkFlowPro/frontend
+npm install                    # first time only
 npm run dev                    # http://localhost:5173
 ```
-The gateway already allows the browser origin `http://localhost:5173` (`CORS_ALLOWED_ORIGINS`).
+Open http://localhost:5173 and sign in with `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD`
+from your `.env`, or click "Create one" to register a new (EMPLOYEE) account.
+
+Optional: `cp .env.example .env.local` in `frontend/` to change `VITE_API_BASE_URL`
+(default `http://localhost:9080`). The gateway already allows the origin `http://localhost:5173`
+(`CORS_ALLOWED_ORIGINS`).
+
+Production build: `npm run build` (output in `frontend/dist`). Lint: `npm run lint`.
+Details: [frontend.md](frontend.md).
+
+### A quick tour
+1. Sign in as the admin → **Projects → New project** → create it → click **Active**.
+2. In another browser (or private window) register a second user.
+3. Back as admin: on the project page click **Add member**, search the new user, **Add**.
+4. **New task** → give it a title, priority and the new user as assignee.
+5. Sign in as the new user: the task is on the dashboard under "My tasks". Open it → **In progress** → **In review**.
+6. As admin open the task → **Completed**. The **Activity** list shows every step.
+7. **Users** (admin only) → **Edit roles** to make someone a TEAM_LEAD or PROJECT_MANAGER.
 
 ## 11. Stopping everything
 
 ```bash
-# Ctrl+C in each service terminal, then:
+# Ctrl+C in each service terminal and in the frontend terminal, then:
 docker compose stop            # keeps the data
 # docker compose down -v       # deletes the database volume too (full reset)
 ```

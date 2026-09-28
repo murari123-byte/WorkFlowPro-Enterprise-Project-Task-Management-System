@@ -2,8 +2,8 @@
 
 A Java 21 / Spring Boot microservices project with a React + TypeScript frontend.
 
-> **Status:** Backend complete and tested (gateway, auth, project, task services, 105 tests).
-> React frontend is in progress and does not build yet.
+> **Status:** Backend and React frontend work end to end (105 backend tests, 21-step browser test).
+> Still to do: final code review and full documentation audit.
 > **See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for exactly what is done and what remains.**
 
 ## Architecture (target for Phase 1)
@@ -28,7 +28,7 @@ Details: [docs/architecture.md](docs/architecture.md)
 | Build | Maven 3.9+ (multi-module) |
 | Database | PostgreSQL 16 (Docker) + Flyway 11 + Spring Data JPA / Hibernate 7 |
 | Security | Spring Security 7 + JWT (HS256, OAuth2 Resource Server) + BCrypt |
-| Frontend | React + TypeScript + Axios + React Router, plain CSS *(Step 5)* |
+| Frontend | React 19 + TypeScript + Vite + Axios + React Router 7, plain CSS |
 | Tests | JUnit 5, Mockito, AssertJ, Testcontainers |
 | API docs | springdoc-openapi 3 (Swagger UI) |
 
@@ -42,7 +42,7 @@ WorkFlowPro/
 ├── project-service/
 ├── task-service/
 ├── notification-service/
-├── frontend/                # React app (Step 5)
+├── frontend/                # React app (Vite) — see docs/frontend.md
 ├── docker-compose.yml       # local PostgreSQL
 ├── docker/postgres/init/    # creates one DB + account per service (first start only)
 ├── docs/                    # setup, architecture, config, dependencies, troubleshooting
@@ -74,8 +74,8 @@ java -jar project-service/target/project-service-0.1.0-SNAPSHOT.jar   # 9082
 java -jar task-service/target/task-service-0.1.0-SNAPSHOT.jar         # 9083
 java -jar api-gateway/target/api-gateway-0.1.0-SNAPSHOT.jar           # 9080
 
-# 5. Check health, then log in as the bootstrap admin from .env (see docs/setup.md step 8)
-curl http://localhost:9080/api/auth/ping
+# 5. Frontend (new terminal) -> http://localhost:5173, sign in as the bootstrap admin from .env
+cd frontend && npm install && npm run dev
 ```
 
 Swagger UI: http://localhost:9081/swagger-ui.html, :9082/swagger-ui.html, :9083/swagger-ui.html
@@ -118,6 +118,7 @@ security design in [docs/authentication.md](docs/authentication.md).
 ## Documentation
 
 - [docs/setup.md](docs/setup.md) — install and run, step by step
+- [docs/frontend.md](docs/frontend.md) — React app: pages, API calls, tokens, states, responsive layout
 - [docs/authentication.md](docs/authentication.md) — JWT, refresh tokens, roles, security rules
 - [docs/api.md](docs/api.md) — every endpoint with request/response examples
 - [docs/architecture.md](docs/architecture.md) — services, ports, communication rules
