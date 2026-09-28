@@ -1,9 +1,6 @@
 package com.workflowpro.auth.config;
 
-import java.nio.charset.StandardCharsets;
-
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -14,28 +11,24 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.workflowpro.auth.security.SecurityErrorHandler;
+import com.workflowpro.common.security.SecurityErrorHandler;
 
 /**
  * Stateless JWT security:
  * - no HTTP session, no cookies, so CSRF protection is not needed
  * - every request except the public ones below must carry "Authorization: Bearer <access token>"
  * - roles are read ONLY from the signed token ("roles" claim), never from request data
+ * Token verification beans (JwtDecoder, roles converter, signing key) come from the common module.
  */
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties(TokenProperties.class)
 public class SecurityConfig {
 
     private static final String[] PUBLIC_POST_ENDPOINTS = {
@@ -74,36 +67,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    SecretKey jwtSigningKey(JwtProperties properties) {
-        return new SecretKeySpec(properties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-    }
-
     /** Signs access tokens (used by JwtService). */
     @Bean
     JwtEncoder jwtEncoder(SecretKey jwtSigningKey) {
         return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSigningKey));
-    }
-
-    /** Verifies signature, expiry and issuer of incoming Bearer tokens. */
-    @Bean
-    JwtDecoder jwtDecoder(SecretKey jwtSigningKey, JwtProperties properties) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(jwtSigningKey)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.issuer()));
-        return decoder;
-    }
-
-    /** Maps the token's "roles" claim (e.g. ["ADMIN"]) to Spring authorities (ROLE_ADMIN). */
-    @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("roles");
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
     }
 }

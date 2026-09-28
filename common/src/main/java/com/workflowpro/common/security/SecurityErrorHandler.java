@@ -1,4 +1,4 @@
-package com.workflowpro.auth.security;
+package com.workflowpro.common.security;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
-import com.workflowpro.auth.exception.ErrorResponse;
+import com.workflowpro.common.exception.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,7 +18,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Writes 401/403 errors raised by the security filters (before any controller runs)
- * in the same JSON format as {@link com.workflowpro.auth.exception.GlobalExceptionHandler}.
+ * in the same JSON format as the GlobalExceptionHandler.
  */
 @Component
 public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDeniedHandler {

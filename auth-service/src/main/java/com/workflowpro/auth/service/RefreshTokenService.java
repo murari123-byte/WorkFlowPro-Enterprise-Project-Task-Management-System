@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.workflowpro.auth.config.JwtProperties;
+import com.workflowpro.auth.config.TokenProperties;
 import com.workflowpro.auth.entity.RefreshToken;
 import com.workflowpro.auth.entity.User;
 import com.workflowpro.auth.exception.InvalidTokenException;
@@ -35,11 +35,11 @@ public class RefreshTokenService {
     private static final int TOKEN_BYTES = 32;
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtProperties properties;
+    private final TokenProperties properties;
     private final Clock clock;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtProperties properties,
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, TokenProperties properties,
                                Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.properties = properties;

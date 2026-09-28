@@ -1,9 +1,10 @@
-package com.workflowpro.auth.exception;
+package com.workflowpro.common.exception;
 
 import org.springframework.http.HttpStatus;
 
 /**
- * Base class for errors we expect and want to show to the client with a specific HTTP status.
+ * Base class for expected errors that should reach the client with a specific HTTP status.
+ * Throw a subclass from the service layer; {@link GlobalExceptionHandler} turns it into JSON.
  */
 public abstract class ApiException extends RuntimeException {
 

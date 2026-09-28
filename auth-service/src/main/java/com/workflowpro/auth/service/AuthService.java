@@ -19,7 +19,7 @@ import com.workflowpro.auth.exception.AccountDisabledException;
 import com.workflowpro.auth.exception.EmailAlreadyExistsException;
 import com.workflowpro.auth.exception.InvalidCredentialsException;
 import com.workflowpro.auth.exception.InvalidTokenException;
-import com.workflowpro.auth.exception.ResourceNotFoundException;
+import com.workflowpro.common.exception.ResourceNotFoundException;
 import com.workflowpro.auth.repository.RoleRepository;
 import com.workflowpro.auth.repository.UserRepository;
 

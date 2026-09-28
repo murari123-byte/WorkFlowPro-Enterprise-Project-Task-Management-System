@@ -19,7 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workflowpro.auth.config.JwtProperties;
+import com.workflowpro.auth.config.TokenProperties;
 import com.workflowpro.auth.entity.RefreshToken;
 import com.workflowpro.auth.entity.User;
 import com.workflowpro.auth.exception.InvalidTokenException;
@@ -37,8 +37,7 @@ class RefreshTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        JwtProperties properties = new JwtProperties("x".repeat(32), "test", Duration.ofMinutes(15),
-                Duration.ofDays(7));
+        TokenProperties properties = new TokenProperties(Duration.ofMinutes(15), Duration.ofDays(7));
         service = new RefreshTokenService(repository, properties, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 

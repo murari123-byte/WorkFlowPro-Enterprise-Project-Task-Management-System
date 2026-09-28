@@ -1,4 +1,4 @@
-package com.workflowpro.auth.exception;
+package com.workflowpro.common.exception;
 
 import java.time.Instant;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * The single error format returned by every endpoint of this service.
+ * The single error format returned by every service.
  *
  * @param fieldErrors only present for validation errors: field name -> message
  */

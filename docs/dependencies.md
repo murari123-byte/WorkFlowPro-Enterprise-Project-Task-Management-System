@@ -33,6 +33,17 @@ Versions are managed by the parent POM (`spring-boot-starter-parent` 4.0.8 and t
 |---|---|---|
 | Docker image `postgres:16-alpine` | 16 | Dev database (docker-compose) and test database (Testcontainers) |
 
+## common (shared library)
+
+| Dependency | Why |
+|---|---|
+| `spring-boot-starter-webmvc`, `spring-boot-starter-validation` | `@RestControllerAdvice`, request types |
+| `spring-boot-starter-security-oauth2-resource-server` | `JwtDecoder`, `JwtAuthenticationConverter` |
+| `spring-data-commons` | `Page` type used by `PageResponse` |
+| `spring-orm` | `ObjectOptimisticLockingFailureException` handling |
+
+Services depend on it with `com.workflowpro:common:${project.version}`.
+
 ## auth-service only (Phase 2)
 
 | Dependency | Scope | Why |

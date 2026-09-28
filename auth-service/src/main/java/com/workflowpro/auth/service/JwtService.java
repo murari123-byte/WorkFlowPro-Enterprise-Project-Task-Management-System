@@ -11,7 +11,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import com.workflowpro.auth.config.JwtProperties;
+import com.workflowpro.auth.config.TokenProperties;
+import com.workflowpro.common.security.JwtProperties;
 import com.workflowpro.auth.entity.User;
 
 /**
@@ -24,12 +25,15 @@ import com.workflowpro.auth.entity.User;
 public class JwtService {
 
     private final JwtEncoder jwtEncoder;
-    private final JwtProperties properties;
+    private final JwtProperties jwtProperties;
+    private final TokenProperties tokenProperties;
     private final Clock clock;
 
-    public JwtService(JwtEncoder jwtEncoder, JwtProperties properties, Clock clock) {
+    public JwtService(JwtEncoder jwtEncoder, JwtProperties jwtProperties, TokenProperties tokenProperties,
+                      Clock clock) {
         this.jwtEncoder = jwtEncoder;
-        this.properties = properties;
+        this.jwtProperties = jwtProperties;
+        this.tokenProperties = tokenProperties;
         this.clock = clock;
     }
 
@@ -41,10 +45,10 @@ public class JwtService {
                 .toList();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer(properties.issuer())
+                .issuer(jwtProperties.issuer())
                 .subject(user.getId().toString())
                 .issuedAt(now)
-                .expiresAt(now.plus(properties.accessTokenTtl()))
+                .expiresAt(now.plus(tokenProperties.accessTokenTtl()))
                 .claim("email", user.getEmail())
                 .claim("roles", roles)
                 .build();
@@ -54,6 +58,6 @@ public class JwtService {
     }
 
     public long accessTokenTtlSeconds() {
-        return properties.accessTokenTtl().toSeconds();
+        return tokenProperties.accessTokenTtl().toSeconds();
     }
 }

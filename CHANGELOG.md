@@ -5,6 +5,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3 / Step 1: shared `common` module (2026-09-28)
+- New Maven module `common` (a library, not a service): `ApiException` + `ResourceNotFoundException`,
+  `ForbiddenException`, `ConflictException`, `BusinessRuleException` (422), `ServiceUnavailableException`;
+  `ErrorResponse`; `GlobalExceptionHandler` (now also handles bad path/query types → 400, optimistic-lock
+  conflicts → 409, DB constraint violations → 409); `SecurityErrorHandler`; `JwtProperties` (secret, issuer)
+  and `JwtVerificationConfig` (JwtDecoder + roles converter); `AuthenticatedUser`; `PageResponse`;
+  `BearerTokenRelayInterceptor` for service-to-service calls.
+- Tests: `AuthenticatedUserTest`, `PageResponseTest`.
+
+### Changed
+- auth-service uses `common` (scans `com.workflowpro.common`); its duplicate exception/security classes
+  were removed. `JwtProperties` in auth-service split: TTLs are now `TokenProperties`. Env vars unchanged.
+
 ### Added — Phase 1 / Step 3: API Gateway routing + CORS (2026-09-28)
 - Routes `/api/auth/**`, `/api/projects/**`, `/api/tasks/**`, `/api/notifications/**` to the four
   services; target URLs from `AUTH_SERVICE_URL`, `PROJECT_SERVICE_URL`, `TASK_SERVICE_URL`,

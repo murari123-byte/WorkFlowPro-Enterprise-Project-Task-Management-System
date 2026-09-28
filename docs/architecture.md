@@ -61,6 +61,22 @@ auth-service :9081 ── verifies JWT itself ── returns JSON
   never trusted just because a request came through the gateway.
 - Unknown path → `404` from the gateway. Service not running → `503` (`ServiceUnavailableHandler`).
 
+## Shared `common` module
+
+A small Maven library (not a service, no database) used by auth-, project- and task-service so that
+all of them behave the same way:
+
+| Package | Contents |
+|---|---|
+| `common.exception` | `ApiException` + subclasses (404, 403, 409, 422, 503), `ErrorResponse`, `GlobalExceptionHandler` |
+| `common.security` | `JwtProperties`, `JwtVerificationConfig` (verify tokens, map `roles` → `ROLE_*`), `SecurityErrorHandler` (JSON 401/403), `AuthenticatedUser` |
+| `common.web` | `PageResponse<T>` — the JSON shape of every paged list |
+| `common.client` | `BearerTokenRelayInterceptor` — forwards the caller's token on service-to-service calls |
+
+Each service adds it to component scanning:
+`@SpringBootApplication(scanBasePackages = {"com.workflowpro.<service>", "com.workflowpro.common"})`.
+Business logic never goes into `common`.
+
 ## Why the gateway is different
 
 Spring Cloud Gateway runs on **WebFlux (Netty)**, not Spring MVC (Tomcat).
